@@ -52,6 +52,11 @@ DATE		VERSION		AUTHOR			COMMENTS
 namespace CoinMarketCap_1
 {
 	using System;
+	using System.Collections.Generic;
+	using System.Linq;
+
+	using CoinMarketCap_2;
+	using CoinMarketCap_2.Dtos;
 
 	using Skyline.DataMiner.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
@@ -68,14 +73,18 @@ namespace CoinMarketCap_1
 		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
-			var IDms = engine.GetDms();
+			var dataMinerAgent = engine.GetDms().GetAgent(161);
+			var neededElementsIds = new List<int> { 13 };
+			var elements = GetNeededElements(dataMinerAgent, neededElementsIds);
 
-			var dmsElementId = new DmsElementId("161/13");
+			var exporter = new GlobalMetricsDataExporter(engine, elements[0]);
 
-			var myElement = IDms.GetElement(dmsElementId);
+			exporter.ExportDataToCsv("path");
+		}
 
-			engine.Log("MY FIRST AUTOMATION SCRIPT TEST LOG");
-			engine.Log(Convert.ToString(myElement));
+		private static List<IDmsElement> GetNeededElements(IDma dataMinerAgent, IEnumerable<int> wantedElementsIds)
+		{
+			return wantedElementsIds.Select(id => dataMinerAgent.GetElement(new DmsElementId($"{dataMinerAgent.Id}/{id}"))).ToList();
 		}
 	}
 }
