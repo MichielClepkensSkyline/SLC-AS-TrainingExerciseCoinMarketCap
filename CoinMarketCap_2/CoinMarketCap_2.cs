@@ -51,10 +51,13 @@ DATE		VERSION		AUTHOR			COMMENTS
 
 namespace CoinMarketCap_1
 {
+	using System;
 	using System.Collections.Generic;
 	using System.Linq;
+	using System.Net.Cache;
 
 	using CoinMarketCap_2.DataProcessors;
+	using CoinMarketCap_2.Processors;
 
 	using Skyline.DataMiner.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
@@ -66,6 +69,9 @@ namespace CoinMarketCap_1
 	public class Script
 	{
 		private const string FilePathBase = "C:/Skyline DataMiner/Documents/";
+		private const int AgentId = 161;
+		private const int GlobalMetricsElementId = 13;
+		private const int CategoriesElementId = 15;
 
 		/// <summary>
 		/// The script entry point.
@@ -73,13 +79,15 @@ namespace CoinMarketCap_1
 		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
-			var dataMinerAgent = engine.GetDms().GetAgent(161);
-			var neededElementsIds = new List<int> { 13 };
+			var dataMinerAgent = engine.GetDms().GetAgent(AgentId);
+			var neededElementsIds = new List<int> { GlobalMetricsElementId, CategoriesElementId };
 			var elements = GetNeededElements(dataMinerAgent, neededElementsIds);
 
-			var globalMetricProcessor = new GlobalMetricsDataProcessor(engine, elements[0]);
+			var globalMetricsProcessor = new GlobalMetricsProcessor(engine, elements[0]);
+			var categoriesProcessor = new CategoriesProcessor(engine, elements[1]);
 
-			globalMetricProcessor.HandleExtractAndPrepareData(FilePathBase + "FolderName");
+			globalMetricsProcessor.HandleExtractAndPrepareData(FilePathBase + "GlobalMetrics");
+			categoriesProcessor.HandleExtractAndPrepareData(FilePathBase + "Categories");
 		}
 
 		private static List<IDmsElement> GetNeededElements(IDma dataMinerAgent, IEnumerable<int> wantedElementsIds)

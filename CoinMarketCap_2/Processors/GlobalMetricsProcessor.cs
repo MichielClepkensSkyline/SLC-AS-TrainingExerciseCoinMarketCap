@@ -7,12 +7,12 @@
     using Skyline.DataMiner.Automation;
     using Skyline.DataMiner.Core.DataMinerSystem.Common;
 
-    public class GlobalMetricsDataProcessor
+    public class GlobalMetricsProcessor
 	{
 		private readonly IEngine _engine;
 		private readonly IDmsElement _coinMarketCapGlobalMetrics;
 
-		public GlobalMetricsDataProcessor(IEngine engine, IDmsElement coinMarketCapGlobalMetrics)
+		public GlobalMetricsProcessor(IEngine engine, IDmsElement coinMarketCapGlobalMetrics)
 		{
 			_engine = engine;
 			_coinMarketCapGlobalMetrics = coinMarketCapGlobalMetrics;
@@ -24,7 +24,7 @@
 
 			if (globalMetricsParameters != null)
 			{
-				var csvData = CsvDataExporterHelper.BuildCsvData(new[] { globalMetricsParameters }, _engine);
+				var csvData = CsvDataExporterHelper.BuildCsv(globalMetricsParameters);
 
 				CsvDataExporterHelper.ExportCsvToFile(filePath, csvData, _engine, true);
 

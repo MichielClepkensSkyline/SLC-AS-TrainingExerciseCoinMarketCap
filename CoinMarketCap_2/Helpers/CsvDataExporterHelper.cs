@@ -11,28 +11,61 @@
 
 	public class CsvDataExporterHelper
 	{
-		public static string BuildCsvData<T>(IEnumerable<T> data, IEngine engine)
+		public static string BuildCsv<T>(T data, List<int> dateColumns = null)
 		{
 			var sb = new StringBuilder();
-			var properties = typeof(T).GetProperties();
 
-			sb.AppendLine(string.Join(",", properties.Select(p => p.Name)));
-
-			foreach (var item in data)
+			if (data is object[][] tableData)
 			{
+				foreach (var tableRow in tableData)
+				{
+					sb.AppendLine(string.Join(",", tableRow.Select((r, index) =>
+					{
+						bool isDateColumn = dateColumns != null && dateColumns.Contains(index);
+
+						if (double.TryParse(Convert.ToString(r), out double parsedDouble))
+						{
+							if (isDateColumn)
+							{
+								try
+								{
+									var dateTimeValue = DateTime.FromOADate(parsedDouble);
+									return dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
+								}
+								catch (ArgumentException)
+								{
+									return parsedDouble.ToString("N0").Replace(",", " ");
+								}
+							}
+
+							return parsedDouble.ToString("N0").Replace(",", " ");
+						}
+
+						return Convert.ToString(r);
+					})));
+				}
+			}
+			else
+			{
+				var properties = typeof(T).GetProperties();
+				sb.AppendLine(string.Join(",", properties.Select(p => p.Name)));
+
 				var row = string.Join(",", properties.Select(p =>
 				{
-					var value = p.GetValue(item)
-							.GetType()
-							.GetMethod("GetDisplayValue")
-							.Invoke(p.GetValue(item), null);
+					var value = p.GetValue(data);
+					var displayValueMethod = value?.GetType().GetMethod("GetDisplayValue");
 
-					if (double.TryParse(value.ToString(), out double parsedDouble))
+					if (displayValueMethod != null)
 					{
-						return parsedDouble.ToString();
+						value = displayValueMethod.Invoke(value, null);
 					}
 
-					return value.ToString();
+					if (double.TryParse(Convert.ToString(value), out double parsedDouble))
+					{
+						return Convert.ToString(parsedDouble.ToString("N0").Replace(",", " "));
+					}
+
+					return Convert.ToString(value);
 				}));
 
 				sb.AppendLine(row);
