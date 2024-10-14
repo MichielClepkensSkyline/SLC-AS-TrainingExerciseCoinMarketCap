@@ -1,21 +1,25 @@
 ﻿namespace CoinMarketCap_2.DataProcessors
 {
-    using System;
+	using System;
 
-    using CoinMarketCap_2.Dtos;
-    using CoinMarketCap_2.Helpers;
-    using Skyline.DataMiner.Automation;
-    using Skyline.DataMiner.Core.DataMinerSystem.Common;
+	using CoinMarketCap_2.Dtos;
+	using CoinMarketCap_2.Helpers;
 
-    public class GlobalMetricsProcessor
+	using Skyline.DataMiner.Automation;
+	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
+	using Skyline.DataMiner.Core.DataMinerSystem.Common;
+
+	public class GlobalMetricsProcessor
 	{
 		private readonly IEngine _engine;
 		private readonly IDmsElement _coinMarketCapGlobalMetrics;
+		private const int AgentId = 161;
+		private const int ElementId = 13;
 
-		public GlobalMetricsProcessor(IEngine engine, IDmsElement coinMarketCapGlobalMetrics)
+		public GlobalMetricsProcessor(IEngine engine)
 		{
 			_engine = engine;
-			_coinMarketCapGlobalMetrics = coinMarketCapGlobalMetrics;
+			_coinMarketCapGlobalMetrics = _engine.GetDms().GetElement(new DmsElementId($"{AgentId}/{ElementId}"));
 		}
 
 		public void HandleExtractAndPrepareData(string filePath)

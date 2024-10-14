@@ -7,21 +7,26 @@
 	using System.Linq;
 	using System.Text;
 
+	using CoinMarketCap_2.Dtos;
+
 	using Skyline.DataMiner.Automation;
 
 	public class CsvDataExporterHelper
 	{
-		public static string BuildCsv<T>(T data, List<int> dateColumns = null)
+		public static string BuildCsv<T>(T data, IEngine engine = null, ElementTableConfigDto elementTableConfigDto = null)
 		{
 			var sb = new StringBuilder();
 
 			if (data is object[][] tableData)
 			{
+				sb.AppendLine(GetColumnDisplayNamesCsvFormat(engine, elementTableConfigDto));
+
 				foreach (var tableRow in tableData)
 				{
 					sb.AppendLine(string.Join(",", tableRow.Select((r, index) =>
 					{
-						bool isDateColumn = dateColumns != null && dateColumns.Contains(index);
+						var dateColumnIds = elementTableConfigDto.TableDateColumnIds;
+						bool isDateColumn = dateColumnIds != null && dateColumnIds.Contains(index + elementTableConfigDto.TableId + 1);
 
 						if (double.TryParse(Convert.ToString(r), out double parsedDouble))
 						{
@@ -118,6 +123,16 @@
 				engine.Log("File write operation failed after multiple attempts. Please ensure the CSV file is not open or being used by another process, then try running the script again.");
 				engine.GenerateInformation("CSV file needs to not interact with other processes to be able to write to it.");
 			}
+		}
+
+		private static string GetColumnDisplayNamesCsvFormat(IEngine engine, ElementTableConfigDto elementTableConfig)
+		{
+			var element = engine.FindElement(elementTableConfig.AgentId, elementTableConfig.ElementId);
+			var protocol = element.Protocol;
+
+			var parameters = protocol.Parameters.Where(p => p.ID > elementTableConfig.TableId && p.ID <= elementTableConfig.LastTableColumnId).OrderBy(p => p.ID).Select(p => p.DisplayName);
+
+			return string.Join(",", parameters);
 		}
 	}
 }

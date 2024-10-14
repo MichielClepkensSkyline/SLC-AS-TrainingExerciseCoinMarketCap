@@ -57,6 +57,7 @@ namespace CoinMarketCap_1
 	using System.Net.Cache;
 
 	using CoinMarketCap_2.DataProcessors;
+	using CoinMarketCap_2.Dtos;
 	using CoinMarketCap_2.Processors;
 
 	using Skyline.DataMiner.Automation;
@@ -69,9 +70,26 @@ namespace CoinMarketCap_1
 	public class Script
 	{
 		private const string FilePathBase = "C:/Skyline DataMiner/Documents/";
-		private const int AgentId = 161;
-		private const int GlobalMetricsElementId = 13;
+		private const int LatestListingElementId = 14;
 		private const int CategoriesElementId = 15;
+
+		private readonly ElementTableConfigDto _categoriesTableConfig = new ElementTableConfigDto
+		{
+			AgentId = 161,
+			ElementId = CategoriesElementId,
+			TableId = 70,
+			LastTableColumnId = 80,
+			TableDateColumnIds = new List<int> { 79, 80 },
+		};
+
+		private readonly ElementTableConfigDto _latestListingTableConfig = new ElementTableConfigDto
+		{
+			AgentId = 161,
+			ElementId = LatestListingElementId,
+			TableId = 10,
+			LastTableColumnId = 27,
+			TableDateColumnIds = new List<int> { 27 },
+		};
 
 		/// <summary>
 		/// The script entry point.
@@ -79,15 +97,13 @@ namespace CoinMarketCap_1
 		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
-			var dataMinerAgent = engine.GetDms().GetAgent(AgentId);
-			var neededElementsIds = new List<int> { GlobalMetricsElementId, CategoriesElementId };
-			var elements = GetNeededElements(dataMinerAgent, neededElementsIds);
-
-			var globalMetricsProcessor = new GlobalMetricsProcessor(engine, elements[0]);
-			var categoriesProcessor = new CategoriesProcessor(engine, elements[1]);
+			var globalMetricsProcessor = new GlobalMetricsProcessor(engine);
+			var categoriesTableProcessor = new GeneralTablesProcessor(engine, _categoriesTableConfig);
+			var latestListingTableProcessor = new GeneralTablesProcessor(engine, _latestListingTableConfig);
 
 			globalMetricsProcessor.HandleExtractAndPrepareData(FilePathBase + "GlobalMetrics");
-			categoriesProcessor.HandleExtractAndPrepareData(FilePathBase + "Categories");
+			categoriesTableProcessor.HandleExtractAndPrepareTableData(FilePathBase + "Categories");
+			latestListingTableProcessor.HandleExtractAndPrepareTableData(FilePathBase + "LatestListing");
 		}
 
 		private static List<IDmsElement> GetNeededElements(IDma dataMinerAgent, IEnumerable<int> wantedElementsIds)
