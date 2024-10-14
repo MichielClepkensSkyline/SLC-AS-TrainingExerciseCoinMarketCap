@@ -22,6 +22,10 @@
     </VisualStudio>
   </ProjectExtensions>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1001" />
     <PackageReference Include="Skyline.DataMiner.Core.DataMinerSystem.Automation" Version="1.1.1.13" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Data" />
   </ItemGroup>
 </Project>

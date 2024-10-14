@@ -51,12 +51,10 @@ DATE		VERSION		AUTHOR			COMMENTS
 
 namespace CoinMarketCap_1
 {
-	using System;
 	using System.Collections.Generic;
 	using System.Linq;
 
-	using CoinMarketCap_2;
-	using CoinMarketCap_2.Dtos;
+	using CoinMarketCap_2.DataProcessors;
 
 	using Skyline.DataMiner.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
@@ -67,6 +65,8 @@ namespace CoinMarketCap_1
 	/// </summary>
 	public class Script
 	{
+		private const string FilePathBase = "C:/Skyline DataMiner/Documents/";
+
 		/// <summary>
 		/// The script entry point.
 		/// </summary>
@@ -77,9 +77,9 @@ namespace CoinMarketCap_1
 			var neededElementsIds = new List<int> { 13 };
 			var elements = GetNeededElements(dataMinerAgent, neededElementsIds);
 
-			var exporter = new GlobalMetricsDataExporter(engine, elements[0]);
+			var globalMetricProcessor = new GlobalMetricsDataProcessor(engine, elements[0]);
 
-			exporter.ExportDataToCsv("path");
+			globalMetricProcessor.HandleExtractAndPrepareData(FilePathBase + "FolderName");
 		}
 
 		private static List<IDmsElement> GetNeededElements(IDma dataMinerAgent, IEnumerable<int> wantedElementsIds)
