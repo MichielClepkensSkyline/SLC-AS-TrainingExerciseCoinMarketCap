@@ -105,10 +105,5 @@ namespace CoinMarketCap_1
 			categoriesTableProcessor.HandleExtractAndPrepareTableData(FilePathBase + "Categories");
 			latestListingTableProcessor.HandleExtractAndPrepareTableData(FilePathBase + "LatestListing");
 		}
-
-		private static List<IDmsElement> GetNeededElements(IDma dataMinerAgent, IEnumerable<int> wantedElementsIds)
-		{
-			return wantedElementsIds.Select(id => dataMinerAgent.GetElement(new DmsElementId($"{dataMinerAgent.Id}/{id}"))).ToList();
-		}
 	}
 }
