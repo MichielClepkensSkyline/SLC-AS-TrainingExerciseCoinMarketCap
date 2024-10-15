@@ -51,18 +51,14 @@ DATE		VERSION		AUTHOR			COMMENTS
 
 namespace CoinMarketCap_1
 {
-	using System;
 	using System.Collections.Generic;
-	using System.Linq;
-	using System.Net.Cache;
+	using System.IO;
 
 	using CoinMarketCap_2.DataProcessors;
 	using CoinMarketCap_2.Dtos;
 	using CoinMarketCap_2.Processors;
 
 	using Skyline.DataMiner.Automation;
-	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
-	using Skyline.DataMiner.Core.DataMinerSystem.Common;
 
 	/// <summary>
 	/// Represents a DataMiner Automation script.
@@ -97,13 +93,22 @@ namespace CoinMarketCap_1
 		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
+			var folderPath = FilePathBase + engine.GetScriptParam("folderName").Value;
+
+			if (!Directory.Exists(folderPath))
+			{
+				engine.Log($"Folder '{folderPath}' does not exist.");
+				engine.ExitFail("Folder that you provided does not exist.");
+				return;
+			}
+
 			var globalMetricsProcessor = new GlobalMetricsProcessor(engine);
 			var categoriesTableProcessor = new GeneralTablesProcessor(engine, _categoriesTableConfig);
 			var latestListingTableProcessor = new GeneralTablesProcessor(engine, _latestListingTableConfig);
 
-			globalMetricsProcessor.HandleExtractAndPrepareData(FilePathBase + "GlobalMetrics");
-			categoriesTableProcessor.HandleExtractAndPrepareTableData(FilePathBase + "Categories");
-			latestListingTableProcessor.HandleExtractAndPrepareTableData(FilePathBase + "LatestListing");
+			globalMetricsProcessor.HandleExtractAndPrepareData(folderPath + '/' + "GlobalMetrics");
+			categoriesTableProcessor.HandleExtractAndPrepareTableData(folderPath + '/' + "Categories");
+			latestListingTableProcessor.HandleExtractAndPrepareTableData(folderPath + '/' + "LatestListing");
 		}
 	}
 }

@@ -11,10 +11,10 @@
 
 	public class GlobalMetricsProcessor
 	{
-		private readonly IEngine _engine;
-		private readonly IDmsElement _coinMarketCapGlobalMetrics;
 		private const int AgentId = 161;
 		private const int ElementId = 13;
+		private readonly IEngine _engine;
+		private readonly IDmsElement _coinMarketCapGlobalMetrics;
 
 		public GlobalMetricsProcessor(IEngine engine)
 		{
@@ -24,20 +24,25 @@
 
 		public void HandleExtractAndPrepareData(string filePath)
 		{
+			if (_coinMarketCapGlobalMetrics.State != ElementState.Active)
+			{
+				_engine.GenerateInformation("Element 'CoinMarketCap - Global Metrics' is not active so no data was exported.");
+				return;
+			}
+
 			var globalMetricsParameters = GetGlobalMetricsParameters();
 
-			if (globalMetricsParameters != null)
-			{
-				var csvData = CsvDataExporterHelper.BuildCsv(globalMetricsParameters);
-
-				CsvDataExporterHelper.ExportCsvToFile(filePath, csvData, _engine, true);
-
-				_engine.Log($"Data successfully exported to CSV at {filePath}");
-			}
-			else
+			if (globalMetricsParameters == null)
 			{
 				_engine.Log("No global metrics data available to export.");
+				return;
 			}
+
+			var csvData = CsvDataExporterHelper.BuildCsv(globalMetricsParameters);
+
+			CsvDataExporterHelper.ExportCsvToFile(filePath, csvData, _engine, true);
+
+			_engine.Log($"Data successfully exported to CSV at {filePath}");
 		}
 
 		private GlobalMetricsParametersDto GetGlobalMetricsParameters()

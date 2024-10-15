@@ -1,14 +1,11 @@
 ﻿namespace CoinMarketCap_2.Helpers
 {
 	using System;
-	using System.Collections.Generic;
-	using System.Globalization;
 	using System.IO;
 	using System.Linq;
+	using System.Reflection;
 	using System.Text;
-
 	using CoinMarketCap_2.Dtos;
-
 	using Skyline.DataMiner.Automation;
 
 	public class CsvDataExporterHelper
@@ -23,57 +20,14 @@
 
 				foreach (var tableRow in tableData)
 				{
-					sb.AppendLine(string.Join(",", tableRow.Select((r, index) =>
-					{
-						var dateColumnIds = elementTableConfigDto.TableDateColumnIds;
-						bool isDateColumn = dateColumnIds != null && dateColumnIds.Contains(index + elementTableConfigDto.TableId + 1);
-
-						if (double.TryParse(Convert.ToString(r), out double parsedDouble))
-						{
-							if (isDateColumn)
-							{
-								try
-								{
-									var dateTimeValue = DateTime.FromOADate(parsedDouble);
-									return dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
-								}
-								catch (ArgumentException)
-								{
-									return parsedDouble.ToString("N0").Replace(",", " ");
-								}
-							}
-
-							return parsedDouble.ToString("N0").Replace(",", " ");
-						}
-
-						return Convert.ToString(r);
-					})));
+					sb.AppendLine(ProcessTableRow(tableRow, elementTableConfigDto));
 				}
 			}
 			else
 			{
 				var properties = typeof(T).GetProperties();
 				sb.AppendLine(string.Join(",", properties.Select(p => p.Name)));
-
-				var row = string.Join(",", properties.Select(p =>
-				{
-					var value = p.GetValue(data);
-					var displayValueMethod = value?.GetType().GetMethod("GetDisplayValue");
-
-					if (displayValueMethod != null)
-					{
-						value = displayValueMethod.Invoke(value, null);
-					}
-
-					if (double.TryParse(Convert.ToString(value), out double parsedDouble))
-					{
-						return Convert.ToString(parsedDouble.ToString("N0").Replace(",", " "));
-					}
-
-					return Convert.ToString(value);
-				}));
-
-				sb.AppendLine(row);
+				sb.AppendLine(ProcessStandaloneParameters(data, properties));
 			}
 
 			return sb.ToString();
@@ -133,6 +87,66 @@
 			var parameters = protocol.Parameters.Where(p => p.ID > elementTableConfig.TableId && p.ID <= elementTableConfig.LastTableColumnId).OrderBy(p => p.ID).Select(p => p.DisplayName);
 
 			return string.Join(",", parameters);
+		}
+
+		private static string ProcessTableRow(object[] tableRow, ElementTableConfigDto elementTableConfigDto)
+		{
+			return string.Join(",", tableRow.Select((r, index) =>
+			{
+				var isDateColumn = IsDateColumn(index, elementTableConfigDto);
+				return FormatCsvValue(r, isDateColumn);
+			}));
+		}
+
+		private static bool IsDateColumn(int index, ElementTableConfigDto elementTableConfigDto)
+		{
+			var columnId = index + elementTableConfigDto.TableId + 1;
+			var dateColumnIds = elementTableConfigDto.TableDateColumnIds;
+			return dateColumnIds != null && dateColumnIds.Contains(columnId);
+		}
+
+		private static string FormatCsvValue(object value, bool isDateColumn)
+		{
+			if (double.TryParse(Convert.ToString(value), out double parsedDouble))
+			{
+				if (isDateColumn)
+				{
+					try
+					{
+						var dateTimeValue = DateTime.FromOADate(parsedDouble);
+						return dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
+					}
+					catch (ArgumentException)
+					{
+						return parsedDouble.ToString("N0").Replace(",", " ");
+					}
+				}
+
+				return parsedDouble.ToString("N0").Replace(",", " ");
+			}
+
+			return Convert.ToString(value);
+		}
+
+		private static string ProcessStandaloneParameters<T>(T data, PropertyInfo[] properties)
+		{
+			return string.Join(",", properties.Select(p =>
+			{
+				var value = p.GetValue(data);
+				var displayValueMethod = value?.GetType().GetMethod("GetDisplayValue");
+
+				if (displayValueMethod != null)
+				{
+					value = displayValueMethod.Invoke(value, null);
+				}
+
+				if (double.TryParse(Convert.ToString(value), out double parsedDouble))
+				{
+					return parsedDouble.ToString("N0").Replace(",", " ");
+				}
+
+				return Convert.ToString(value);
+			}));
 		}
 	}
 }

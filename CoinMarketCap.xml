@@ -10,6 +10,9 @@
 	<Memory>
 	</Memory>
 	<Parameters>
+		<ScriptParameter id="1" type="string">
+			<Description>folderName</Description>
+		</ScriptParameter>
 	</Parameters>
 	<Script>
 		<Exe id="2" type="csharp">
