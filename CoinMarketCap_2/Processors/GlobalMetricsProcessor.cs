@@ -13,20 +13,27 @@
 	{
 		private const int AgentId = 161;
 		private const int ElementId = 13;
+
 		private readonly IEngine _engine;
 		private readonly IDmsElement _coinMarketCapGlobalMetrics;
 
 		public GlobalMetricsProcessor(IEngine engine)
 		{
 			_engine = engine;
-			_coinMarketCapGlobalMetrics = _engine.GetDms().GetElement(new DmsElementId($"{AgentId}/{ElementId}"));
+			_coinMarketCapGlobalMetrics = GetElement();
 		}
 
 		public void HandleExtractAndPrepareData(string filePath)
 		{
+			if (_coinMarketCapGlobalMetrics is null)
+			{
+				_engine.GenerateInformation($"Element with ID {AgentId}/{ElementId} was not found.");
+				return;
+			}
+
 			if (_coinMarketCapGlobalMetrics.State != ElementState.Active)
 			{
-				_engine.GenerateInformation("Element 'CoinMarketCap - Global Metrics' is not active so no data was exported.");
+				_engine.GenerateInformation("Element 'CoinMarketCap - Global Metrics' is not active, no data was exported.");
 				return;
 			}
 
@@ -38,11 +45,16 @@
 				return;
 			}
 
-			var csvData = CsvDataExporterHelper.BuildCsv(globalMetricsParameters);
+			ExportData(globalMetricsParameters, filePath);
+		}
 
-			CsvDataExporterHelper.ExportCsvToFile(filePath, csvData, _engine, true);
+		private IDmsElement GetElement()
+		{
+			var element = _engine.GetDms()?.GetElement(new DmsElementId($"{AgentId}/{ElementId}"));
+			if (element == null)
+				_engine.Log($"Element with ID {AgentId}/{ElementId} not found.");
 
-			_engine.Log($"Data successfully exported to CSV at {filePath}");
+			return element;
 		}
 
 		private GlobalMetricsParametersDto GetGlobalMetricsParameters()
@@ -68,6 +80,15 @@
 				DecentralizedFinanceMarketCap = _coinMarketCapGlobalMetrics.GetStandaloneParameter<double?>(62),
 				StablecoinMarketCap = _coinMarketCapGlobalMetrics.GetStandaloneParameter<double?>(63),
 			};
+		}
+
+		private void ExportData(GlobalMetricsParametersDto globalMetricsParameters, string filePath)
+		{
+			var csvData = CsvDataExporterHelper.BuildCsv(globalMetricsParameters);
+
+			CsvDataExporterHelper.ExportCsvToFile(filePath, csvData, _engine, true);
+
+			_engine.Log($"Data successfully exported to CSV at {filePath}");
 		}
 	}
 }

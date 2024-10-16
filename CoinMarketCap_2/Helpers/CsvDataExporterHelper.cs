@@ -5,23 +5,21 @@
 	using System.Linq;
 	using System.Reflection;
 	using System.Text;
+
 	using CoinMarketCap_2.Dtos;
+
 	using Skyline.DataMiner.Automation;
 
 	public class CsvDataExporterHelper
 	{
-		public static string BuildCsv<T>(T data, IEngine engine = null, ElementTableConfigDto elementTableConfigDto = null)
+		public static string BuildCsv<T>(T data, IEngine engine = null, ElementTableConfigDto config = null)
 		{
 			var sb = new StringBuilder();
 
 			if (data is object[][] tableData)
 			{
-				sb.AppendLine(GetColumnDisplayNamesCsvFormat(engine, elementTableConfigDto));
-
-				foreach (var tableRow in tableData)
-				{
-					sb.AppendLine(ProcessTableRow(tableRow, elementTableConfigDto));
-				}
+				sb.AppendLine(GetColumnDisplayNamesCsvFormat(engine, config));
+				sb.AppendLine(ProcessTable(tableData, config));
 			}
 			else
 			{
@@ -89,20 +87,45 @@
 			return string.Join(",", parameters);
 		}
 
+		private static string ProcessTable(object[][] tableData, ElementTableConfigDto config)
+		{
+			return string.Join(Environment.NewLine, tableData.Select(row => ProcessTableRow(row, config)));
+		}
+
 		private static string ProcessTableRow(object[] tableRow, ElementTableConfigDto elementTableConfigDto)
 		{
-			return string.Join(",", tableRow.Select((r, index) =>
+			return string.Join(",", tableRow.Select((value, index) =>
 			{
 				var isDateColumn = IsDateColumn(index, elementTableConfigDto);
-				return FormatCsvValue(r, isDateColumn);
+				return FormatCsvValue(value, isDateColumn);
 			}));
 		}
 
-		private static bool IsDateColumn(int index, ElementTableConfigDto elementTableConfigDto)
+		private static string ProcessStandaloneParameters<T>(T data, PropertyInfo[] properties)
 		{
-			var columnId = index + elementTableConfigDto.TableId + 1;
-			var dateColumnIds = elementTableConfigDto.TableDateColumnIds;
-			return dateColumnIds != null && dateColumnIds.Contains(columnId);
+			return string.Join(",", properties.Select(p =>
+			{
+				var value = p.GetValue(data);
+				var displayValueMethod = value?.GetType().GetMethod("GetDisplayValue");
+
+				if (displayValueMethod != null)
+				{
+					value = displayValueMethod.Invoke(value, null);
+				}
+
+				if (double.TryParse(Convert.ToString(value), out double parsedDouble))
+				{
+					return parsedDouble.ToString("N0").Replace(",", " ");
+				}
+
+				return Convert.ToString(value);
+			}));
+		}
+
+		private static bool IsDateColumn(int index, ElementTableConfigDto config)
+		{
+			var columnId = index + config.TableId + 1;
+			return config.TableDateColumnIds?.Contains(columnId) ?? false;
 		}
 
 		private static string FormatCsvValue(object value, bool isDateColumn)
@@ -126,27 +149,6 @@
 			}
 
 			return Convert.ToString(value);
-		}
-
-		private static string ProcessStandaloneParameters<T>(T data, PropertyInfo[] properties)
-		{
-			return string.Join(",", properties.Select(p =>
-			{
-				var value = p.GetValue(data);
-				var displayValueMethod = value?.GetType().GetMethod("GetDisplayValue");
-
-				if (displayValueMethod != null)
-				{
-					value = displayValueMethod.Invoke(value, null);
-				}
-
-				if (double.TryParse(Convert.ToString(value), out double parsedDouble))
-				{
-					return parsedDouble.ToString("N0").Replace(",", " ");
-				}
-
-				return Convert.ToString(value);
-			}));
 		}
 	}
 }

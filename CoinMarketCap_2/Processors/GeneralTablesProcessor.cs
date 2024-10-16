@@ -1,12 +1,5 @@
 ﻿namespace CoinMarketCap_2.Processors
 {
-	using System;
-	using System.Collections.Generic;
-	using System.Linq;
-	using System.Runtime.CompilerServices;
-	using System.Text;
-	using System.Threading.Tasks;
-
 	using CoinMarketCap_2.Dtos;
 	using CoinMarketCap_2.Helpers;
 
@@ -17,38 +10,67 @@
 	public class GeneralTablesProcessor
 	{
 		private readonly IEngine _engine;
-		private readonly ElementTableConfigDto _elementTableConfigDto;
+		private readonly ElementTableConfigDto _tableExporterConfig;
 
-		public GeneralTablesProcessor(IEngine engine, ElementTableConfigDto elementTableConfigDto)
+		public GeneralTablesProcessor(IEngine engine, ElementTableConfigDto tableExporterConfig)
 		{
 			_engine = engine;
-			_elementTableConfigDto = elementTableConfigDto;
+			_tableExporterConfig = tableExporterConfig;
 		}
 
 		public void HandleExtractAndPrepareTableData(string filePath)
 		{
-			var dataMinerAgent = _engine.GetDms().GetAgent(_elementTableConfigDto.AgentId);
-			var element = dataMinerAgent.GetElement(new DmsElementId($"{dataMinerAgent.Id}/{_elementTableConfigDto.ElementId}"));
+			var element = GetElement();
 
-			if (element.State != ElementState.Active)
-			{
-				_engine.GenerateInformation($"Element '{element.Name}' is not active so no data was exported.");
+			if (!IsElementActive(element))
 				return;
+
+			var tableData = GetTableValues(element);
+
+			if (IsTableEmpty(tableData, element.Name))
+				return;
+
+			ExportTableData(tableData, filePath);
+		}
+
+		private IDmsElement GetElement()
+		{
+			var agent = _engine.GetDms()?.GetAgent(_tableExporterConfig.AgentId);
+			if (agent == null)
+			{
+				_engine.Log($"Agent with ID {_tableExporterConfig.AgentId} not found.");
+				return null;
 			}
 
-			var categoriesTable = GetTableValues(element);
-
-			if (categoriesTable == null || categoriesTable.Length == 0)
+			var element = agent.GetElement(new DmsElementId($"{agent.Id}/{_tableExporterConfig.ElementId}"));
+			if (element == null)
 			{
-				_engine.GenerateInformation($"Element '{element.Name}' has no available data to export.");
-				return;
+				_engine.Log($"Element with ID {_tableExporterConfig.ElementId} not found.");
 			}
 
-			var csvData = CsvDataExporterHelper.BuildCsv(categoriesTable, _engine, _elementTableConfigDto);
+			return element;
+		}
 
-			CsvDataExporterHelper.ExportCsvToFile(filePath, csvData, _engine);
+		private bool IsElementActive(IDmsElement element)
+		{
+			if (element == null || element.State != ElementState.Active)
+			{
+				_engine.GenerateInformation($"Element '{element?.Name ?? "Unknown"}' is not active, so no data was exported.");
+				return false;
+			}
 
-			_engine.Log($"Data successfully exported to CSV at {filePath}");
+			return true;
+		}
+
+		private bool IsTableEmpty(object[][] tableData, string elementName)
+		{
+			if (tableData.Length == 0)
+			{
+				_engine.GenerateInformation($"Element '{elementName}' has no available data to export.");
+				return true;
+			}
+
+			return false;
 		}
 
 		private object[][] GetTableValues(IDmsElement element)
@@ -58,7 +80,14 @@
 				return new object[0][];
 			}
 
-			return element.GetTable(_elementTableConfigDto.TableId).GetRows();
+			return element.GetTable(_tableExporterConfig.TableId).GetRows();
+		}
+
+		private void ExportTableData(object[][] tableData, string filePath)
+		{
+			var csvData = CsvDataExporterHelper.BuildCsv(tableData, _engine, _tableExporterConfig);
+			CsvDataExporterHelper.ExportCsvToFile(filePath, csvData, _engine);
+			_engine.Log($"Data successfully exported to CSV at {filePath}");
 		}
 	}
 }

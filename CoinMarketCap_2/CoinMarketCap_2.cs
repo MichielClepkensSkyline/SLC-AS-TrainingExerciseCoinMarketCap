@@ -68,6 +68,9 @@ namespace CoinMarketCap_1
 		private const string FilePathBase = "C:/Skyline DataMiner/Documents/";
 		private const int LatestListingElementId = 14;
 		private const int CategoriesElementId = 15;
+		private const string GlobalMetricsCsvName = "GlobalMetrics";
+		private const string CategoriesCsvName = "Categories";
+		private const string LatestListingCsvName = "LatestListing";
 
 		private readonly ElementTableConfigDto _categoriesTableConfig = new ElementTableConfigDto
 		{
@@ -93,22 +96,35 @@ namespace CoinMarketCap_1
 		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
-			var folderPath = FilePathBase + engine.GetScriptParam("folderName").Value;
+			var folderPath = GetFolderPath(engine);
 
-			if (!Directory.Exists(folderPath))
-			{
-				engine.Log($"Folder '{folderPath}' does not exist.");
-				engine.ExitFail("Folder that you provided does not exist.");
+			if (!ValidateFolderExists(engine, folderPath))
 				return;
-			}
 
+			CreateAndStartProcessors(engine, folderPath);
+		}
+
+		private static string GetFolderPath(IEngine engine) => $"{FilePathBase}{engine.GetScriptParam("folderName").Value}/";
+
+		private static bool ValidateFolderExists(IEngine engine, string folderPath)
+		{
+			if (Directory.Exists(folderPath))
+				return true;
+
+			engine.Log($"Folder '{folderPath}' does not exist.");
+			engine.ExitFail("Folder that you provided does not exist.");
+			return false;
+		}
+
+		private void CreateAndStartProcessors(IEngine engine, string folderPath)
+		{
 			var globalMetricsProcessor = new GlobalMetricsProcessor(engine);
-			var categoriesTableProcessor = new GeneralTablesProcessor(engine, _categoriesTableConfig);
-			var latestListingTableProcessor = new GeneralTablesProcessor(engine, _latestListingTableConfig);
+			var categoriesProcessor = new GeneralTablesProcessor(engine, _categoriesTableConfig);
+			var latestListingProcessor = new GeneralTablesProcessor(engine, _latestListingTableConfig);
 
-			globalMetricsProcessor.HandleExtractAndPrepareData(folderPath + '/' + "GlobalMetrics");
-			categoriesTableProcessor.HandleExtractAndPrepareTableData(folderPath + '/' + "Categories");
-			latestListingTableProcessor.HandleExtractAndPrepareTableData(folderPath + '/' + "LatestListing");
+			globalMetricsProcessor.HandleExtractAndPrepareData(Path.Combine(folderPath, GlobalMetricsCsvName));
+			categoriesProcessor.HandleExtractAndPrepareTableData(Path.Combine(folderPath, CategoriesCsvName));
+			latestListingProcessor.HandleExtractAndPrepareTableData(Path.Combine(folderPath, LatestListingCsvName));
 		}
 	}
 }
