@@ -1,27 +1,35 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<TargetFramework>net462</TargetFramework>
-		<Company>Skyline Communications</Company>
-		<Copyright>© Skyline Communications</Copyright>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-		<DebugType>full</DebugType>
-		<CodeAnalysisRuleSet>..\Internal\Code Analysis\qaction-debug.ruleset</CodeAnalysisRuleSet>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-		<DebugType>pdbonly</DebugType>
-		<CodeAnalysisRuleSet>..\Internal\Code Analysis\qaction-release.ruleset</CodeAnalysisRuleSet>
-	</PropertyGroup>
-	<PropertyGroup>
-		<DefineConstants>$(DefineConstants);DCFv1;DBInfo;ALARM_SQUASHING</DefineConstants>
-	</PropertyGroup>
-	<ItemGroup>
-		<PackageReference Include="Skyline.DataMiner.Dev.Automation" Version="10.1.0.6" />
-	</ItemGroup>
-	<ProjectExtensions>
-	    <VisualStudio>
-		    <UserProperties DisLinkedXmlFile="..\CoinMarketCap.xml" DisProjectType="automationScriptProject" DisLinkId="1" />
-        </VisualStudio>
-	</ProjectExtensions>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <Company>Skyline Communications</Company>
+    <Copyright>© Skyline Communications</Copyright>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <CodeAnalysisRuleSet>..\Internal\Code Analysis\qaction-debug.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <CodeAnalysisRuleSet>..\Internal\Code Analysis\qaction-release.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);DCFv1;DBInfo;ALARM_SQUASHING</DefineConstants>
+  </PropertyGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties DisLinkedXmlFile="..\CoinMarketCap.xml" DisProjectType="automationScriptProject" DisLinkId="2" />
+    </VisualStudio>
+  </ProjectExtensions>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1001" />
+    <PackageReference Include="Skyline.DataMiner.Core.DataMinerSystem.Automation" Version="1.1.1.13" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Data" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Skyline.DataMiner.Dev.Automation" Version="10.4.10" />
+  </ItemGroup>
 </Project>

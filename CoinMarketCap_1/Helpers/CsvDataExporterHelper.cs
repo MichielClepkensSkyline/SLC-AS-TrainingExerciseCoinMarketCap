@@ -1,4 +1,4 @@
-﻿namespace CoinMarketCap_2.Helpers
+﻿namespace CoinMarketCap_1.Helpers
 {
 	using System;
 	using System.IO;
@@ -6,7 +6,7 @@
 	using System.Reflection;
 	using System.Text;
 
-	using CoinMarketCap_2.Dtos;
+	using CoinMarketCap_1.Dtos;
 
 	using Skyline.DataMiner.Automation;
 

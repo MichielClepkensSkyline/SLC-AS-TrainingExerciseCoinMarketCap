@@ -1,4 +1,4 @@
-﻿namespace CoinMarketCap_2.Dtos
+﻿namespace CoinMarketCap_1.Dtos
 {
 	using System;
 	using Skyline.DataMiner.Core.DataMinerSystem.Common;

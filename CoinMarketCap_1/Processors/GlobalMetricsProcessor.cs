@@ -1,9 +1,9 @@
-﻿namespace CoinMarketCap_2.DataProcessors
+﻿namespace CoinMarketCap_1.DataProcessors
 {
 	using System;
 
-	using CoinMarketCap_2.Dtos;
-	using CoinMarketCap_2.Helpers;
+	using CoinMarketCap_1.Dtos;
+	using CoinMarketCap_1.Helpers;
 
 	using Skyline.DataMiner.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;

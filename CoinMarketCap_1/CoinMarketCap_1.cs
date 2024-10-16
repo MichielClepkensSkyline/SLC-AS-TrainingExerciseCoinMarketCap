@@ -51,7 +51,12 @@ DATE		VERSION		AUTHOR			COMMENTS
 
 namespace CoinMarketCap_1
 {
-	using System;
+	using System.Collections.Generic;
+	using System.IO;
+
+	using CoinMarketCap_1.DataProcessors;
+	using CoinMarketCap_1.Dtos;
+	using CoinMarketCap_1.Processors;
 
 	using Skyline.DataMiner.Automation;
 
@@ -60,15 +65,62 @@ namespace CoinMarketCap_1
 	/// </summary>
 	public class Script
 	{
+		private const string FilePathBase = "C:/Skyline DataMiner/Documents/";
+		private const int LatestListingElementId = 14;
+		private const int CategoriesElementId = 15;
+		private const string GlobalMetricsCsvName = "GlobalMetrics";
+		private const string CategoriesCsvName = "Categories";
+		private const string LatestListingCsvName = "LatestListing";
+
+		private readonly ElementTableConfigDto _categoriesTableConfig = new ElementTableConfigDto(
+			agentId: 161,
+			elementId: CategoriesElementId,
+			tableId: 70,
+			lastTableColumnId: 80,
+			tableDateColumnIds: new List<int> { 79, 80 });
+
+		private readonly ElementTableConfigDto _latestListingTableConfig = new ElementTableConfigDto(
+			agentId: 161,
+			elementId: LatestListingElementId,
+			tableId: 10,
+			lastTableColumnId: 27,
+			tableDateColumnIds: new List<int> { 27 });
+
 		/// <summary>
 		/// The script entry point.
 		/// </summary>
-		/// <param name="engine">ink with SLAutomation process.</param>
+		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
-			var varijabla = engine.GetDummy("myDummyProtocol");
+			var folderPath = GetFolderPath(engine);
 
-			engine.Log(Convert.ToString(varijabla));
+			if (!ValidateFolderExists(engine, folderPath))
+				return;
+
+			CreateAndStartProcessors(engine, folderPath);
+		}
+
+		private static string GetFolderPath(IEngine engine) => $"{FilePathBase}{engine.GetScriptParam("folderName").Value}/";
+
+		private static bool ValidateFolderExists(IEngine engine, string folderPath)
+		{
+			if (Directory.Exists(folderPath))
+				return true;
+
+			engine.Log($"Folder '{folderPath}' does not exist.");
+			engine.ExitFail("Folder that you provided does not exist.");
+			return false;
+		}
+
+		private void CreateAndStartProcessors(IEngine engine, string folderPath)
+		{
+			var globalMetricsProcessor = new GlobalMetricsProcessor(engine);
+			var categoriesProcessor = new GeneralTablesProcessor(engine, _categoriesTableConfig);
+			var latestListingProcessor = new GeneralTablesProcessor(engine, _latestListingTableConfig);
+
+			globalMetricsProcessor.HandleExtractAndPrepareData(Path.Combine(folderPath, GlobalMetricsCsvName));
+			categoriesProcessor.HandleExtractAndPrepareTableData(Path.Combine(folderPath, CategoriesCsvName));
+			latestListingProcessor.HandleExtractAndPrepareTableData(Path.Combine(folderPath, LatestListingCsvName));
 		}
 	}
 }
