@@ -12,7 +12,7 @@
 
 	public class CsvDataExporterHelper
 	{
-		public static string BuildCsv<T>(T data, IEngine engine = null, ElementTableConfigDto config = null)
+		public static string BuildCsv<T>(T data, IEngine engine = null, TableConfigDto config = null)
 		{
 			var sb = new StringBuilder();
 
@@ -77,31 +77,7 @@
 			}
 		}
 
-		private static string GetColumnDisplayNamesCsvFormat(IEngine engine, ElementTableConfigDto elementTableConfig)
-		{
-			var element = engine.FindElement(elementTableConfig.AgentId, elementTableConfig.ElementId);
-			var protocol = element.Protocol;
-
-			var parameters = protocol.Parameters.Where(p => p.ID > elementTableConfig.TableId && p.ID <= elementTableConfig.LastTableColumnId).OrderBy(p => p.ID).Select(p => p.DisplayName);
-
-			return string.Join(",", parameters);
-		}
-
-		private static string ProcessTable(object[][] tableData, ElementTableConfigDto config)
-		{
-			return string.Join(Environment.NewLine, tableData.Select(row => ProcessTableRow(row, config)));
-		}
-
-		private static string ProcessTableRow(object[] tableRow, ElementTableConfigDto elementTableConfigDto)
-		{
-			return string.Join(",", tableRow.Select((value, index) =>
-			{
-				var isDateColumn = IsDateColumn(index, elementTableConfigDto);
-				return FormatCsvValue(value, isDateColumn);
-			}));
-		}
-
-		private static string ProcessStandaloneParameters<T>(T data, PropertyInfo[] properties)
+		public static string ProcessStandaloneParameters<T>(T data, PropertyInfo[] properties)
 		{
 			return string.Join(",", properties.Select(p =>
 			{
@@ -122,7 +98,31 @@
 			}));
 		}
 
-		private static bool IsDateColumn(int index, ElementTableConfigDto config)
+		private static string GetColumnDisplayNamesCsvFormat(IEngine engine, TableConfigDto elementTableConfig)
+		{
+			var element = engine.FindElement(elementTableConfig.AgentId, elementTableConfig.ElementId);
+			var protocol = element.Protocol;
+
+			var parameters = protocol.Parameters.Where(p => p.ID > elementTableConfig.TableId && p.ID <= elementTableConfig.LastTableColumnId).OrderBy(p => p.ID).Select(p => p.DisplayName);
+
+			return string.Join(",", parameters);
+		}
+
+		private static string ProcessTable(object[][] tableData, TableConfigDto config)
+		{
+			return string.Join(Environment.NewLine, tableData.Select(row => ProcessTableRow(row, config)));
+		}
+
+		private static string ProcessTableRow(object[] tableRow, TableConfigDto elementTableConfigDto)
+		{
+			return string.Join(",", tableRow.Select((value, index) =>
+			{
+				var isDateColumn = IsDateColumn(index, elementTableConfigDto);
+				return FormatCsvValue(value, isDateColumn);
+			}));
+		}
+
+		private static bool IsDateColumn(int index, TableConfigDto config)
 		{
 			var columnId = index + config.TableId + 1;
 			return config.TableDateColumnIds?.Contains(columnId) ?? false;

@@ -10,9 +10,9 @@
 	public class GeneralTablesProcessor
 	{
 		private readonly IEngine _engine;
-		private readonly ElementTableConfigDto _tableExporterConfig;
+		private readonly TableConfigDto _tableExporterConfig;
 
-		public GeneralTablesProcessor(IEngine engine, ElementTableConfigDto tableExporterConfig)
+		public GeneralTablesProcessor(IEngine engine, TableConfigDto tableExporterConfig)
 		{
 			_engine = engine;
 			_tableExporterConfig = tableExporterConfig;

@@ -28,8 +28,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{F8938D60-51A0-4880-9CFC-19C66379BB5D}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Code Analysis", "Code Analysis", "{5E46F96E-339B-4E4E-B351-2CD2C3FCA004}"
 	ProjectSection(SolutionItems) = preProject
 		Internal\Code Analysis\qaction-debug.ruleset = Internal\Code Analysis\qaction-debug.ruleset
@@ -46,6 +44,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Actions", "Actions", "{1CE6
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoinMarketCap_1", "CoinMarketCap_1\CoinMarketCap_1.csproj", "{B37BBCB9-8E06-4962-B05B-67CEBA8799B0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoinMarketCap_1Tests", "CoinMarketCap_1Tests\CoinMarketCap_1Tests.csproj", "{D3024019-40D9-456F-8A96-4B02D3CDED8C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +56,10 @@ Global
 		{B37BBCB9-8E06-4962-B05B-67CEBA8799B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B37BBCB9-8E06-4962-B05B-67CEBA8799B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B37BBCB9-8E06-4962-B05B-67CEBA8799B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3024019-40D9-456F-8A96-4B02D3CDED8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3024019-40D9-456F-8A96-4B02D3CDED8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3024019-40D9-456F-8A96-4B02D3CDED8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3024019-40D9-456F-8A96-4B02D3CDED8C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

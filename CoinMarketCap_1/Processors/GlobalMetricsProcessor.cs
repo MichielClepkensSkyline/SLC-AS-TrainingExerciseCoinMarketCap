@@ -48,6 +48,24 @@
 			ExportData(globalMetricsParameters, filePath);
 		}
 
+		private static string ConvertDateTimeParameter(IDmsStandaloneParameter<DateTime?> dateParam)
+		{
+			if (double.TryParse(Convert.ToString(dateParam.GetDisplayValue()), out double parsedDouble))
+			{
+				try
+				{
+					var dateTimeValue = DateTime.FromOADate(parsedDouble);
+					return dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
+				}
+				catch (ArgumentException)
+				{
+					return string.Empty;
+				}
+			}
+
+			return string.Empty;
+		}
+
 		private IDmsElement GetElement()
 		{
 			var element = _engine.GetDms()?.GetElement(new DmsElementId($"{AgentId}/{ElementId}"));
@@ -66,7 +84,7 @@
 
 			return new GlobalMetricsParametersDto
 			{
-				LastUpdate = _coinMarketCapGlobalMetrics.GetStandaloneParameter<DateTime?>(49),
+				LastUpdate = ConvertDateTimeParameter(_coinMarketCapGlobalMetrics.GetStandaloneParameter<DateTime?>(49)),
 				BitcoinDominance = _coinMarketCapGlobalMetrics.GetStandaloneParameter<double?>(51),
 				EthereumDominance = _coinMarketCapGlobalMetrics.GetStandaloneParameter<double?>(52),
 				BitcoinDominancePercentageChange24H = _coinMarketCapGlobalMetrics.GetStandaloneParameter<double?>(53),

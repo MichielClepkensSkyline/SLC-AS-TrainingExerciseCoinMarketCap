@@ -5,7 +5,7 @@
 
 	internal class GlobalMetricsParametersDto
 	{
-		public IDmsStandaloneParameter<DateTime?> LastUpdate { get; set; }
+		public string LastUpdate { get; set; }
 
 		public IDmsStandaloneParameter<double?> BitcoinDominance { get; set; }
 

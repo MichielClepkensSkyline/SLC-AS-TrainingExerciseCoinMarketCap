@@ -72,14 +72,14 @@ namespace CoinMarketCap_1
 		private const string CategoriesCsvName = "Categories";
 		private const string LatestListingCsvName = "LatestListing";
 
-		private readonly ElementTableConfigDto _categoriesTableConfig = new ElementTableConfigDto(
+		private readonly TableConfigDto _categoriesTableConfig = new TableConfigDto(
 			agentId: 161,
 			elementId: CategoriesElementId,
 			tableId: 70,
 			lastTableColumnId: 80,
 			tableDateColumnIds: new List<int> { 79, 80 });
 
-		private readonly ElementTableConfigDto _latestListingTableConfig = new ElementTableConfigDto(
+		private readonly TableConfigDto _latestListingTableConfig = new TableConfigDto(
 			agentId: 161,
 			elementId: LatestListingElementId,
 			tableId: 10,
