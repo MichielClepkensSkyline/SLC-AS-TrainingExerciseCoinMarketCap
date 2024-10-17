@@ -51,6 +51,7 @@ DATE		VERSION		AUTHOR			COMMENTS
 
 namespace CoinMarketCap_1
 {
+	using System;
 	using System.Collections.Generic;
 	using System.IO;
 
@@ -92,12 +93,19 @@ namespace CoinMarketCap_1
 		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
-			var folderPath = GetFolderPath(engine);
+			try
+			{
+				var folderPath = GetFolderPath(engine);
 
-			if (!ValidateFolderExists(engine, folderPath))
-				return;
+				if (!ValidateFolderExists(engine, folderPath))
+					return;
 
-			CreateAndStartProcessors(engine, folderPath);
+				CreateAndStartProcessors(engine, folderPath);
+			}
+			catch (Exception ex)
+			{
+				engine.Log($"AS|CoinMarketCap|Exception:{Environment.NewLine}{ex.Message}");
+			}
 		}
 
 		private static string GetFolderPath(IEngine engine) => $"{FilePathBase}{engine.GetScriptParam("folderName").Value}/";

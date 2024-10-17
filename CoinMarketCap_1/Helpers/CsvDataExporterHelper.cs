@@ -77,7 +77,7 @@
 			}
 		}
 
-		public static string ProcessStandaloneParameters<T>(T data, PropertyInfo[] properties)
+		internal static string ProcessStandaloneParameters<T>(T data, PropertyInfo[] properties)
 		{
 			return string.Join(",", properties.Select(p =>
 			{
@@ -89,12 +89,7 @@
 					value = displayValueMethod.Invoke(value, null);
 				}
 
-				if (double.TryParse(Convert.ToString(value), out double parsedDouble))
-				{
-					return parsedDouble.ToString("N0").Replace(",", " ");
-				}
-
-				return Convert.ToString(value);
+				return FormatCsvValue(value);
 			}));
 		}
 
@@ -128,7 +123,7 @@
 			return config.TableDateColumnIds?.Contains(columnId) ?? false;
 		}
 
-		private static string FormatCsvValue(object value, bool isDateColumn)
+		private static string FormatCsvValue(object value, bool isDateColumn = false)
 		{
 			if (double.TryParse(Convert.ToString(value), out double parsedDouble))
 			{
