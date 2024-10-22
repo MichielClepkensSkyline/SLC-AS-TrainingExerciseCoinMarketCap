@@ -67,6 +67,7 @@ namespace CoinMarketCap_1
 	public class Script
 	{
 		private const string FilePathBase = "C:/Skyline DataMiner/Documents/";
+		private const int AgentId = 161;
 		private const int LatestListingElementId = 14;
 		private const int CategoriesElementId = 15;
 		private const string GlobalMetricsCsvName = "GlobalMetrics";
@@ -74,14 +75,14 @@ namespace CoinMarketCap_1
 		private const string LatestListingCsvName = "LatestListing";
 
 		private readonly TableConfigDto _categoriesTableConfig = new TableConfigDto(
-			agentId: 161,
+			agentId: AgentId,
 			elementId: CategoriesElementId,
 			tableId: 70,
 			lastTableColumnId: 80,
 			tableDateColumnIds: new List<int> { 79, 80 });
 
 		private readonly TableConfigDto _latestListingTableConfig = new TableConfigDto(
-			agentId: 161,
+			agentId: AgentId,
 			elementId: LatestListingElementId,
 			tableId: 10,
 			lastTableColumnId: 27,
@@ -122,7 +123,7 @@ namespace CoinMarketCap_1
 
 		private void CreateAndStartProcessors(IEngine engine, string folderPath)
 		{
-			var globalMetricsProcessor = new GlobalMetricsProcessor(engine);
+			var globalMetricsProcessor = new GlobalMetricsProcessor(engine, AgentId);
 			var categoriesProcessor = new GeneralTablesProcessor(engine, _categoriesTableConfig);
 			var latestListingProcessor = new GeneralTablesProcessor(engine, _latestListingTableConfig);
 

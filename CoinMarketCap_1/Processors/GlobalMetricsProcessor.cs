@@ -11,15 +11,16 @@
 
 	public class GlobalMetricsProcessor
 	{
-		private const int AgentId = 161;
 		private const int ElementId = 13;
 
 		private readonly IEngine _engine;
+		private readonly int _agentId;
 		private readonly IDmsElement _coinMarketCapGlobalMetrics;
 
-		public GlobalMetricsProcessor(IEngine engine)
+		public GlobalMetricsProcessor(IEngine engine,int agentId)
 		{
 			_engine = engine;
+			_agentId = agentId;
 			_coinMarketCapGlobalMetrics = GetElement();
 		}
 
@@ -27,7 +28,7 @@
 		{
 			if (_coinMarketCapGlobalMetrics is null)
 			{
-				_engine.GenerateInformation($"Element with ID {AgentId}/{ElementId} was not found.");
+				_engine.GenerateInformation($"Element with ID {_agentId}/{ElementId} was not found.");
 				return;
 			}
 
@@ -68,9 +69,7 @@
 
 		private IDmsElement GetElement()
 		{
-			var element = _engine.GetDms()?.GetElement(new DmsElementId($"{AgentId}/{ElementId}"));
-			if (element == null)
-				_engine.Log($"Element with ID {AgentId}/{ElementId} not found.");
+			var element = _engine.GetDms().GetElement(new DmsElementId($"{_agentId}/{ElementId}"));
 
 			return element;
 		}

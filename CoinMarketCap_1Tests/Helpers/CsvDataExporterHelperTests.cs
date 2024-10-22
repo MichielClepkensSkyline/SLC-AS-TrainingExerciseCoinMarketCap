@@ -1,6 +1,5 @@
 ﻿namespace CoinMarketCap_1Tests
 {
-	using System;
 	using CoinMarketCap_1.Helpers;
 	using FluentAssertions;
 	using Microsoft.VisualStudio.TestTools.UnitTesting;

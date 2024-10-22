@@ -1,6 +1,7 @@
 ﻿namespace CoinMarketCap_1.Helpers
 {
 	using System;
+	using System.Globalization;
 	using System.IO;
 	using System.Linq;
 	using System.Reflection;
@@ -64,7 +65,7 @@
 				{
 					if (i < retryCount - 1)
 					{
-						System.Threading.Thread.Sleep(delayBetweenRetries);
+						engine.Sleep(delayBetweenRetries);
 					}
 				}
 			}
@@ -125,25 +126,29 @@
 
 		private static string FormatCsvValue(object value, bool isDateColumn = false)
 		{
-			if (double.TryParse(Convert.ToString(value), out double parsedDouble))
+			if (double.TryParse(
+				Convert.ToString(value, CultureInfo.InvariantCulture),
+				NumberStyles.Any,
+				CultureInfo.InvariantCulture,
+				out double parsedDouble))
 			{
 				if (isDateColumn)
 				{
 					try
 					{
 						var dateTimeValue = DateTime.FromOADate(parsedDouble);
-						return dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
+						return dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
 					}
 					catch (ArgumentException)
 					{
-						return parsedDouble.ToString("N0").Replace(",", " ");
+						return parsedDouble.ToString("N0", CultureInfo.InvariantCulture).Replace(",", " ");
 					}
 				}
 
-				return parsedDouble.ToString("N0").Replace(",", " ");
+				return parsedDouble.ToString("N0", CultureInfo.InvariantCulture).Replace(",", " ");
 			}
 
-			return Convert.ToString(value);
+			return Convert.ToString(value, CultureInfo.InvariantCulture);
 		}
 	}
 }

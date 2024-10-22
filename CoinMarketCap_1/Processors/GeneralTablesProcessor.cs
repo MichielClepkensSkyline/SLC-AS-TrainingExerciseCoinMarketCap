@@ -35,18 +35,9 @@
 
 		private IDmsElement GetElement()
 		{
-			var agent = _engine.GetDms()?.GetAgent(_tableExporterConfig.AgentId);
-			if (agent == null)
-			{
-				_engine.Log($"Agent with ID {_tableExporterConfig.AgentId} not found.");
-				return null;
-			}
-
-			var element = agent.GetElement(new DmsElementId($"{agent.Id}/{_tableExporterConfig.ElementId}"));
-			if (element == null)
-			{
-				_engine.Log($"Element with ID {_tableExporterConfig.ElementId} not found.");
-			}
+			var element = _engine
+				.GetDms()
+				.GetElement(new DmsElementId($"{_tableExporterConfig.AgentId}/{_tableExporterConfig.ElementId}"));
 
 			return element;
 		}
