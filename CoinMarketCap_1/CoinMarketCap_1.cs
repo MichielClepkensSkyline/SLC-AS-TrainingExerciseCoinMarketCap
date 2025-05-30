@@ -51,16 +51,15 @@ DATE		VERSION		AUTHOR			COMMENTS
 
 namespace CoinMarketCap_1
 {
-	using System;
-	using System.Collections.Generic;
-	using System.Globalization;
-	using System.Text;
-	using Skyline.DataMiner.Automation;
-	
-	/// <summary>
-	/// Represents a DataMiner Automation script.
-	/// </summary>
-	public class Script
+    using System.Linq;
+    using Skyline.DataMiner.Automation;
+    using Skyline.DataMiner.Core.DataMinerSystem.Automation;
+    using Skyline.DataMiner.Core.DataMinerSystem.Common;
+
+    /// <summary>
+    /// Represents a DataMiner Automation script.
+    /// </summary>
+    public class Script
 	{
 		/// <summary>
 		/// The script entry point.
@@ -68,7 +67,9 @@ namespace CoinMarketCap_1
 		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
-	
-		}
+			IDms dms = engine.GetDms();
+			var elements = dms.GetElements().Where(x => x.Protocol.Name == "Exercise HTTP CoinMarketCap");
+			engine.GenerateInformation(elements.Count().ToString());
+        }
 	}
 }
