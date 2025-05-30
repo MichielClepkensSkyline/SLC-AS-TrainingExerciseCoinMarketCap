@@ -54,6 +54,7 @@ namespace CoinMarketCap_1
 	using System;
 	using System.Collections.Generic;
 	using System.IO;
+	using System.Linq;
 	using Skyline.DataMiner.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Common;
@@ -73,20 +74,25 @@ namespace CoinMarketCap_1
         {
             try
             {
-                // engine.GetDummy("Folder Name");
+                string folderName = engine.GetDummy(2).Name;
                 this.engine = engine;
                 IDms dms = engine.GetDms();
 
                 // Fixed params
                 var tableId = 1000;
-                string elementName1 = "CoinMarketCap element 1";
-                string elementName2 = "CoinMarketCap element 2";
-                string elementName3 = "CoinMarketCap element 3";
+
+                // Get all elements
+                var elements = dms.GetElements().Where(x => x.Protocol.Name == "Exercise HTTP CoinMarketCap").ToArray();
+                string elementName1 = elements[3].Name;
+                string elementName2 = elements[1].Name;
+                string elementName3 = elements[2].Name;
+
+                // engine.GenerateInformation("Element: " + elements[2].Name);
 
                 // First element
                 var element1 = dms.GetElement(elementName1);
                 var table1 = element1.GetTable(tableId).GetData();
-                var path1 = CreatePath(elementName1);
+                var path1 = CreatePath(folderName, elementName1);
 
                 // engine.GenerateInformation("Table1 count is: " + table1.Count);
                 WriteTableDataToCsvfile(table1, path1);
@@ -94,7 +100,7 @@ namespace CoinMarketCap_1
                 // Second element
                 var element2 = dms.GetElement(elementName2);
                 var table2 = element1.GetTable(tableId).GetData();
-                var path2 = CreatePath(elementName2);
+                var path2 = CreatePath(folderName, elementName2);
 
                 // engine.GenerateInformation("Table2 count is: " + table2.Count);
                 WriteTableDataToCsvfile(table2, path2);
@@ -102,7 +108,7 @@ namespace CoinMarketCap_1
                 // Third element
                 var element3 = dms.GetElement(elementName3);
                 var table3 = element1.GetTable(tableId).GetData();
-                var path3 = CreatePath(elementName3);
+                var path3 = CreatePath(folderName, elementName3);
 
                 // engine.GenerateInformation("Table3 count is: " + table3.Count);
                 WriteTableDataToCsvfile(table3, path3);
@@ -149,9 +155,9 @@ namespace CoinMarketCap_1
             }
         }
 
-        private string CreatePath(string elementName)
+        private string CreatePath(string folderName, string elementName)
         {
-            return "C:\\Skyline DataMiner\\Documents\\CSV files\\" + elementName + ".csv";
+            return "C:\\Skyline DataMiner\\Documents\\"+ folderName + "\\" + elementName + ".csv";
         }
     }
 }
