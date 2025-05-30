@@ -45,26 +45,113 @@ Revision History:
 
 DATE		VERSION		AUTHOR			COMMENTS
 
-11/01/2024	1.0.0.1		XXX, Skyline	Initial version
+11/01/2024	1.0.0.1		ABA, Skyline	Initial version
 ****************************************************************************
 */
 
 namespace CoinMarketCap_1
 {
-    using Skyline.DataMiner.Automation;
+	using System;
+	using System.Collections.Generic;
+	using System.IO;
+	using Skyline.DataMiner.Automation;
+	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
+	using Skyline.DataMiner.Core.DataMinerSystem.Common;
 
     /// <summary>
     /// Represents a DataMiner Automation script.
     /// </summary>
-    public class Script
-	{
-		/// <summary>
-		/// The script entry point.
-		/// </summary>
-		/// <param name="engine">Link with SLAutomation process.</param>
-		public void Run(IEngine engine)
-		{
-	
-		}
-	}
+	public class Script
+    {
+        private IEngine engine;
+
+        /// <summary>
+        /// The Script entry point.
+        /// </summary>
+        /// <param name="engine">Link with SLAutomation process.</param>
+        public void Run(IEngine engine)
+        {
+            try
+            {
+                // engine.GetDummy("Folder Name");
+                this.engine = engine;
+                IDms dms = engine.GetDms();
+
+                // Fixed params
+                var tableId = 1000;
+                string elementName1 = "CoinMarketCap element 1";
+                string elementName2 = "CoinMarketCap element 2";
+                string elementName3 = "CoinMarketCap element 3";
+
+                // First element
+                var element1 = dms.GetElement(elementName1);
+                var table1 = element1.GetTable(tableId).GetData();
+                var path1 = CreatePath(elementName1);
+
+                // engine.GenerateInformation("Table1 count is: " + table1.Count);
+                WriteTableDataToCsvfile(table1, path1);
+
+                // Second element
+                var element2 = dms.GetElement(elementName2);
+                var table2 = element1.GetTable(tableId).GetData();
+                var path2 = CreatePath(elementName2);
+
+                // engine.GenerateInformation("Table2 count is: " + table2.Count);
+                WriteTableDataToCsvfile(table2, path2);
+
+                // Third element
+                var element3 = dms.GetElement(elementName3);
+                var table3 = element1.GetTable(tableId).GetData();
+                var path3 = CreatePath(elementName3);
+
+                // engine.GenerateInformation("Table3 count is: " + table3.Count);
+                WriteTableDataToCsvfile(table3, path3);
+
+                engine.SetFlag(RunTimeFlags.NoKeyCaching);
+                engine.Timeout = TimeSpan.FromHours(10);
+            }
+            catch (ScriptAbortException)
+            {
+                throw;
+            }
+            catch (ScriptForceAbortException)
+            {
+                throw;
+            }
+            catch (ScriptTimeoutException)
+            {
+                throw;
+            }
+            catch (InteractiveUserDetachedException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                engine.ExitFail("Run|Something went wrong: " + ex);
+            }
+        }
+
+        private void WriteTableDataToCsvfile(IDictionary<string, object[]> tableData, string path)
+        {
+            using (StreamWriter streamWriter = new StreamWriter(path))
+            {
+                int lastUpdateColumnId = 3;
+                streamWriter.WriteLine(string.Join(",", "Rank", "Name", "Symbol", "Last Update", "Makret Cap", "Circulating Suppy", "Price", "1h%", "24h%", "7d%" ));
+                streamWriter.Flush();
+
+                foreach (object[] row in tableData.Values)
+                {
+                    row[lastUpdateColumnId] = DateTime.FromOADate((double)row[3]);
+                    streamWriter.WriteLine(string.Join(",", row));
+                    streamWriter.Flush();
+                }
+            }
+        }
+
+        private string CreatePath(string elementName)
+        {
+            return "C:\\Skyline DataMiner\\Documents\\CSV files\\" + elementName + ".csv";
+        }
+    }
 }
