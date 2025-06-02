@@ -59,6 +59,7 @@ namespace CoinMarketCap_1
     using Skyline.DataMiner.Automation;
     using Skyline.DataMiner.Core.DataMinerSystem.Automation;
     using Skyline.DataMiner.Core.DataMinerSystem.Common;
+    using Skyline.DataMiner.Net.ReportsAndDashboards;
 
     /// <summary>
     /// Represents a DataMiner Automation script.
@@ -91,6 +92,11 @@ namespace CoinMarketCap_1
             {
                 throw;
             }
+            catch (DirectoryNotFoundException ex)
+            {
+                engine.GenerateInformation($"{ex}");
+                engine.Log($"Exception: {ex.Message}");
+            }
             catch (Exception ex)
             {
                 engine.Log($"Run|Something went wrong: {ex}");
@@ -105,7 +111,7 @@ namespace CoinMarketCap_1
 
             IDms dms = engine.GetDms();
             var elements = dms.GetElements().Where(x => x.Protocol.Name == protocolName);
-            engine.GenerateInformation(elements.Count().ToString());
+            engine.GenerateInformation($"Preparing to export {elements.Count().ToString()} elements");
             string folderPath = engine.GetScriptParam(2).Value;
 
             if (elements != null && elements.Any())
@@ -158,25 +164,33 @@ namespace CoinMarketCap_1
 
         public void ExportTableData(string[] columns, IDictionary<string, object[]> tableData, string filePath, bool append)
         {
-            using (var writer = new StreamWriter(filePath, append))
+            var directory = Path.GetDirectoryName(filePath);
+            if (Directory.Exists(directory))
             {
-                if (append)
+                using (var writer = new StreamWriter(filePath, append))
                 {
-                    writer.WriteLine();
-                    writer.Flush();
-                }
-
-                writer.WriteLine(string.Join(",", columns));
-                writer.Flush();
-
-                if (tableData != null && tableData.Any())
-                {
-                    foreach (object[] rowValue in tableData.Values)
+                    if (append)
                     {
-                        writer.WriteLine(string.Join(",", rowValue));
+                        writer.WriteLine();
                         writer.Flush();
                     }
+
+                    writer.WriteLine(string.Join(",", columns));
+                    writer.Flush();
+
+                    if (tableData != null && tableData.Any())
+                    {
+                        foreach (object[] rowValue in tableData.Values)
+                        {
+                            writer.WriteLine(string.Join(",", rowValue));
+                            writer.Flush();
+                        }
+                    }
                 }
+            }
+            else
+            {
+                throw new DirectoryNotFoundException($"The folder path '{directory}' does not exist.");
             }
         }
     }
