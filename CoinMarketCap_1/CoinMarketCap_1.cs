@@ -51,7 +51,11 @@ DATE		VERSION		AUTHOR			COMMENTS
 
 namespace CoinMarketCap_1
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
+    using System.Reflection;
     using Skyline.DataMiner.Automation;
     using Skyline.DataMiner.Core.DataMinerSystem.Automation;
     using Skyline.DataMiner.Core.DataMinerSystem.Common;
@@ -67,9 +71,52 @@ namespace CoinMarketCap_1
 		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
-			IDms dms = engine.GetDms();
-			var elements = dms.GetElements().Where(x => x.Protocol.Name == "Exercise HTTP CoinMarketCap");
-			engine.GenerateInformation(elements.Count().ToString());
+            IDms dms = engine.GetDms();
+            var elements = dms.GetElements().Where(x => x.Protocol.Name == "Exercise HTTP CoinMarketCap");
+            engine.GenerateInformation(elements.Count().ToString());
+            string folderPath = engine.GetScriptParam(2).Value;
+
+            foreach (var element in elements)
+            {
+                if (element.State.ToString() == "Active")
+                {
+                    string elementPath = folderPath + "\\" + element.Name + ".csv";
+                    var marketTable = element.GetTable(1000);
+                    var marketTableData = marketTable.GetData();
+                    PrepareMarketDataTable(marketTableData,elementPath);
+                }
+            }
         }
-	}
+
+		public void PrepareMarketDataTable(IDictionary<string, object[]> tableData, string filePath)
+        {
+            var columns = typeof(MarketTable)
+           .GetFields(BindingFlags.Public | BindingFlags.Static)
+           .Select(f => f.GetValue(null)?.ToString()).ToArray();
+
+            int dateIndex = Array.IndexOf(columns, MarketTable.lastUpdated);
+
+            foreach (object[] rowValue in tableData.Values)
+            {
+                rowValue[dateIndex] = DateTime.FromOADate((double)rowValue[dateIndex]);
+            }
+
+            StoreTableData(columns, tableData, filePath);
+        }
+
+		public void StoreTableData(string[] columns, IDictionary<string, object[]> tableData, string filePath)
+        {
+            using (var writer = new StreamWriter(filePath))
+            {
+                writer.WriteLine(string.Join(",", columns));
+                writer.Flush();
+
+                foreach (object[] rowValue in tableData.Values)
+                {
+                    writer.WriteLine(string.Join(",", rowValue));
+                    writer.Flush();
+                }
+            }
+        }
+    }
 }
