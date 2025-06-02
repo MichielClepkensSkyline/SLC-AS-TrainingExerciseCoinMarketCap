@@ -1,6 +1,6 @@
 /*
 ****************************************************************************
-*  Copyright (c) 2024,  Skyline Communications NV  All Rights Reserved.    *
+*  Copyright (c) 2025,  Skyline Communications NV  All Rights Reserved.    *
 ****************************************************************************
 
 By using this script, you expressly agree with the usage terms and
@@ -45,24 +45,24 @@ Revision History:
 
 DATE		VERSION		AUTHOR			COMMENTS
 
-11/01/2024	1.0.0.1		ABA, Skyline	Initial version
+02/06/2025	1.0.0.1		ABA, Skyline	Initial version
 ****************************************************************************
 */
 
 namespace CoinMarketCap_1
 {
-	using System;
-	using System.Collections.Generic;
-	using System.IO;
-	using System.Linq;
-	using Skyline.DataMiner.Automation;
-	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
-	using Skyline.DataMiner.Core.DataMinerSystem.Common;
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using Skyline.DataMiner.Automation;
+    using Skyline.DataMiner.Core.DataMinerSystem.Automation;
+    using Skyline.DataMiner.Core.DataMinerSystem.Common;
 
     /// <summary>
     /// Represents a DataMiner Automation script.
     /// </summary>
-	public class Script
+    public class Script
     {
         private IEngine engine;
 
@@ -74,15 +74,16 @@ namespace CoinMarketCap_1
         {
             try
             {
-                string folderName = engine.GetScriptParam("FolderName").Value;
+                // Fixed params
+                const int tableId = 1000;
+                const string protocolName = "Exercise HTTP CoinMarketCap";
+
+                string folderName = engine.GetScriptParam(2).Value;
                 this.engine = engine;
                 IDms dms = engine.GetDms();
 
-                // Fixed params
-                var tableId = 1000;
-
                 // Get all elements
-                var elements = dms.GetElements().Where(x => x.Protocol.Name == "Exercise HTTP CoinMarketCap").ToArray();
+                var elements = dms.GetElements().Where(x => x.Protocol.Name == protocolName).ToArray();
                 string elementName1 = elements[3].Name;
                 string elementName2 = elements[1].Name;
                 string elementName3 = elements[2].Name;
@@ -112,6 +113,66 @@ namespace CoinMarketCap_1
 
                 // engine.GenerateInformation("Table3 count is: " + table3.Count);
                 WriteTableDataToCsvfile(table3, path3);
+
+                // Scheduler
+                var dma = dms.GetAgent(Engine.SLNetRaw.ServerDetails.AgentID);
+                var scheduler = dma.Scheduler;
+
+                DateTime startDate = DateTime.Now;
+                DateTime endDate = DateTime.Now.AddDays(2);
+
+                string activStartDay = startDate.ToString("yyyy - MM - dd");
+                string activStopDay = endDate.ToString("yyyy - MM - dd");
+
+                string startTime = startDate.ToString("HH: mm:ss");
+                string endTime = endDate.ToString("HH: mm:ss");
+
+                string taskType = "daily";
+                string runInterval = "1"; // Run interval (x minutes(daily) / 1,…,31,101,102(monthly) / 1,3,5,7 (1=Monday, 7=Sunday)(weekly))
+
+                string scriptName = "CoinMarketCap";
+                string elemLinked = string.Empty;
+                string paramLinked = string.Empty;
+                string taskName = "GetRefreshData";
+                string taskDescription = "Get refreshed data and store him in CSV files.";
+
+                object[] data = new object[]
+                {
+                    new object []
+                    {
+                        new string []
+                        {
+                            taskName,
+                            activStartDay,
+                            activStopDay,
+                            startTime,
+                            taskType,
+                            runInterval,
+                            string.Empty,
+                            taskDescription,
+                            "TRUE",
+                            endTime,
+                            string.Empty,
+                        },
+                    },
+                    new object[]
+                       {
+                        new string[]
+                        {
+                            "automation",
+                            scriptName,
+                            elemLinked,
+                            paramLinked,
+                            // elem2Linked,
+                            "CHECKSETS:FALSE",
+                            "DEFER: False",
+                        },
+                       },
+                    new object[] {},
+                };
+
+                int taskId = scheduler.CreateTask(data);
+                engine.GenerateInformation("Task id: " + taskId);
 
                 engine.SetFlag(RunTimeFlags.NoKeyCaching);
                 engine.Timeout = TimeSpan.FromHours(10);

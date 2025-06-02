@@ -11,13 +11,10 @@
 	</Protocols>
 
 	<Memory>
-		<File id="3" volatile="true">
-			<Description>folderName</Description>
-		</File>
 	</Memory>
 
 	<Parameters>
-		<ScriptParameter id="2" type="string" values="folderName">
+		<ScriptParameter id="2" type="string" values="">
 			<Description>FolderName</Description>
 		</ScriptParameter>
 	</Parameters>
