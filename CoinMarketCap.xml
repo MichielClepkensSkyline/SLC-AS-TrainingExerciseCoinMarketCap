@@ -8,18 +8,18 @@
 	<Folder>Market Coin Cap</Folder>
 
 	<Protocols>
-		<Protocol id="2">
-			<Description>CSV files</Description>
-			<Name>Exercise HTTP CoinMarketCap</Name>
-			<Version>1.0.0.1_DIS</Version>
-			<DefaultElement>400064/21</DefaultElement>
-		</Protocol>
 	</Protocols>
 
 	<Memory>
+		<File id="3" volatile="true">
+			<Description>folderName</Description>
+		</File>
 	</Memory>
 
 	<Parameters>
+		<ScriptParameter id="2" type="string" values="folderName">
+			<Description>FolderName</Description>
+		</ScriptParameter>
 	</Parameters>
 
 	<Script>

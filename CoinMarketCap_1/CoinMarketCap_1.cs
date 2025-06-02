@@ -74,7 +74,7 @@ namespace CoinMarketCap_1
         {
             try
             {
-                string folderName = engine.GetDummy(2).Name;
+                string folderName = engine.GetScriptParam("FolderName").Value;
                 this.engine = engine;
                 IDms dms = engine.GetDms();
 
