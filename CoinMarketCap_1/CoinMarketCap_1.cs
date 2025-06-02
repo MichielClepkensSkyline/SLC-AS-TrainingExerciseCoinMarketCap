@@ -45,7 +45,7 @@ Revision History:
 
 DATE		VERSION		AUTHOR			COMMENTS
 
-11/01/2024	1.0.0.1		XXX, Skyline	Initial version
+02/06/2025	1.0.0.1		DanijelBr, Skyline	Initial version
 ****************************************************************************
 */
 
@@ -65,30 +65,70 @@ namespace CoinMarketCap_1
     /// </summary>
     public class Script
 	{
-		/// <summary>
-		/// The script entry point.
-		/// </summary>
-		/// <param name="engine">Link with SLAutomation process.</param>
-		public void Run(IEngine engine)
+        /// <summary>
+        /// The script entry point.
+        /// </summary>
+        /// <param name="engine">Link with SLAutomation process.</param>
+        public void Run(IEngine engine)
+        {
+            try
+            {
+                RunSafe(engine);
+            }
+            catch (ScriptAbortException)
+            {
+                throw;
+            }
+            catch (ScriptForceAbortException)
+            {
+                throw;
+            }
+            catch (ScriptTimeoutException)
+            {
+                throw;
+            }
+            catch (InteractiveUserDetachedException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                engine.Log($"Run|Something went wrong: {ex}");
+            }
+        }
+
+        public void RunSafe(IEngine engine)
 		{
+            var protocolName = "Exercise HTTP CoinMarketCap";
+            var marketTableID = 1000;
+            var cryptoListingTableID = 2000;
+
             IDms dms = engine.GetDms();
-            var elements = dms.GetElements().Where(x => x.Protocol.Name == "Exercise HTTP CoinMarketCap");
+            var elements = dms.GetElements().Where(x => x.Protocol.Name == protocolName);
             engine.GenerateInformation(elements.Count().ToString());
             string folderPath = engine.GetScriptParam(2).Value;
 
-            foreach (var element in elements)
+            if (elements != null && elements.Any())
             {
-                if (element.State.ToString() == "Active")
+                foreach (var element in elements)
                 {
-                    string elementPath = folderPath + "\\" + element.Name + ".csv";
-                    var marketTable = element.GetTable(1000);
-                    var marketTableData = marketTable.GetData();
-                    PrepareMarketDataTable(marketTableData,elementPath);
+                    if (element.State.ToString() == "Active")
+                    {
+                        string elementPath = folderPath + "\\" + element.Name + ".csv";
+
+                        var marketTable = element.GetTable(marketTableID);
+                        var marketTableData = marketTable?.GetData();
+                        PrepareAndExportMarketDataTable(marketTableData, elementPath);
+
+                        var cryptoListingTable = element.GetTable(cryptoListingTableID);
+                        var cryptoListingTableData = cryptoListingTable?.GetData();
+                        PrepareAndExportCryptoListingTable(cryptoListingTableData, elementPath);
+                    }
                 }
             }
         }
 
-		public void PrepareMarketDataTable(IDictionary<string, object[]> tableData, string filePath)
+        public void PrepareAndExportMarketDataTable(IDictionary<string, object[]> tableData, string filePath)
         {
             var columns = typeof(MarketTable)
            .GetFields(BindingFlags.Public | BindingFlags.Static)
@@ -96,25 +136,46 @@ namespace CoinMarketCap_1
 
             int dateIndex = Array.IndexOf(columns, MarketTable.lastUpdated);
 
-            foreach (object[] rowValue in tableData.Values)
+            if (tableData != null && tableData.Any())
             {
-                rowValue[dateIndex] = DateTime.FromOADate((double)rowValue[dateIndex]);
+                foreach (object[] rowValue in tableData.Values)
+                {
+                    rowValue[dateIndex] = DateTime.FromOADate((double)rowValue[dateIndex]);
+                }
             }
 
-            StoreTableData(columns, tableData, filePath);
+            ExportTableData(columns, tableData, filePath, false);
         }
 
-		public void StoreTableData(string[] columns, IDictionary<string, object[]> tableData, string filePath)
+        public void PrepareAndExportCryptoListingTable(IDictionary<string, object[]> tableData, string filePath)
         {
-            using (var writer = new StreamWriter(filePath))
+            var columns = typeof(CryptoListingTable)
+           .GetFields(BindingFlags.Public | BindingFlags.Static)
+           .Select(f => f.GetValue(null)?.ToString()).ToArray();
+
+            ExportTableData(columns, tableData, filePath, true);
+        }
+
+        public void ExportTableData(string[] columns, IDictionary<string, object[]> tableData, string filePath, bool append)
+        {
+            using (var writer = new StreamWriter(filePath, append))
             {
+                if (append)
+                {
+                    writer.WriteLine();
+                    writer.Flush();
+                }
+
                 writer.WriteLine(string.Join(",", columns));
                 writer.Flush();
 
-                foreach (object[] rowValue in tableData.Values)
+                if (tableData != null && tableData.Any())
                 {
-                    writer.WriteLine(string.Join(",", rowValue));
-                    writer.Flush();
+                    foreach (object[] rowValue in tableData.Values)
+                    {
+                        writer.WriteLine(string.Join(",", rowValue));
+                        writer.Flush();
+                    }
                 }
             }
         }

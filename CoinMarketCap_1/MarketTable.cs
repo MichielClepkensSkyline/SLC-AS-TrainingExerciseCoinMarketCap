@@ -2,7 +2,6 @@
 {
     internal class MarketTable
     {
-
         public static string marketDataID = "Market Data ID";
         public static string name = "Name";
         public static string title = "Title";
