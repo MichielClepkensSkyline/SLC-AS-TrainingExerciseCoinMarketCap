@@ -1,6 +1,6 @@
 ﻿namespace CoinMarketCap_1
 {
-    internal class MarketTable
+    public class MarketTable
     {
         public static string marketDataID = "Market Data ID";
         public static string name = "Name";

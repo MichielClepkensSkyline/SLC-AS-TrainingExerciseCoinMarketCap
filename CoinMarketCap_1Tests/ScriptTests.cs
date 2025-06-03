@@ -1,4 +1,7 @@
-﻿namespace CoinMarketCap_1.Tests
+﻿using System.Reflection;
+using System.Text;
+
+namespace CoinMarketCap_1.Tests
 {
     [TestClass()]
     public class ScriptTests
@@ -8,67 +11,55 @@
         {
             // Arrange
             var script = new Script();
-            IDictionary<string, object[]> tableData = null; // testiramo sa null
             string fakeFilePath = "Z:\\fakepath\\notexist.csv";
-            string[] columns = null;
+            string data = null;
 
             // Act & Assert
             NUnit.Framework.Assert.Throws<DirectoryNotFoundException>(() =>
-                script.ExportTableData(columns, tableData, fakeFilePath, false));
+                script.ExportTableData(data, fakeFilePath, false));
         }
 
         [TestMethod()]
-        public void PrepareAndExportMarketDataTable_nullData()
+        public void PrepareMarketDataTable_nullData()
         {
             // Arrange
             var script = new Script();
-            IDictionary<string, object[]> tableData = null; // testiramo sa null
-            string fakeFilePath = "Z:\\fakepath\\notexist.csv";
+            IDictionary<string, object[]> tableData = null;
+
+            var displayColumnNames = typeof(MarketTable)
+           .GetFields(BindingFlags.Public | BindingFlags.Static)
+           .Select(folder => folder.GetValue(null)?.ToString()).ToArray();
+            var stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine(string.Join(",", displayColumnNames));
+            var expectedTableContent = stringBuilder.ToString();
 
             // Act
-            try
-            {
-                script.PrepareAndExportMarketDataTable(tableData, fakeFilePath);
-            }
+
+            var tableContent = script.PrepareMarketDataTable(tableData);
+
             // Assert
-            catch (Exception ex)
-            {
-                if (ex is NullReferenceException)
-                {
-                    Assert.Fail("NullReferenceException was thrown.");
-                }
-                else
-                {
-                    Assert.IsTrue(true);
-                }
-            }
+            Assert.AreEqual<string>(tableContent, expectedTableContent);
         }
 
         [TestMethod()]
-        public void PrepareAndExportCryptoListingTable_nullData()
+        public void PrepareCryptoListingTable_nullData()
         {
-           // Arrange
+            // Arrange
             var script = new Script();
-            IDictionary<string, object[]> tableData = null; // testiramo sa null
-            string fakeFilePath = "Z:\\fakepath\\notexist.csv";
+            IDictionary<string, object[]> tableData = null;
+
+            var displayColumnNames = typeof(CryptoListingTable)
+           .GetFields(BindingFlags.Public | BindingFlags.Static)
+           .Select(folder => folder.GetValue(null)?.ToString()).ToArray();
+            var stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine(string.Join(",", displayColumnNames));
+            var expectedTableContent = stringBuilder.ToString();
 
             // Act
-            try
-            {
-                script.PrepareAndExportCryptoListingTable(tableData, fakeFilePath);
-            }
+            var tableContent = script.PrepareCryptoListingTable(tableData);
+            
             // Assert
-            catch (Exception ex)
-            {
-                if (ex is NullReferenceException)
-                {
-                    Assert.Fail("NullReferenceException was thrown.");
-                }
-                else
-                {
-                    Assert.IsTrue(true);
-                }
-            }
+            Assert.AreEqual<string>(tableContent, expectedTableContent);
         }
     }
 }

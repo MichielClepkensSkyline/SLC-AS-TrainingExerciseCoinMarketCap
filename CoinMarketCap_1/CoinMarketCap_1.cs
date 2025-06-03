@@ -1,6 +1,6 @@
 /*
 ****************************************************************************
-*  Copyright (c) 2024,  Skyline Communications NV  All Rights Reserved.    *
+*  Copyright (c) 2025,  Skyline Communications NV  All Rights Reserved.    *
 ****************************************************************************
 
 By using this script, you expressly agree with the usage terms and
@@ -56,10 +56,10 @@ namespace CoinMarketCap_1
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Text;
     using Skyline.DataMiner.Automation;
     using Skyline.DataMiner.Core.DataMinerSystem.Automation;
     using Skyline.DataMiner.Core.DataMinerSystem.Common;
-    using Skyline.DataMiner.Net.ReportsAndDashboards;
 
     /// <summary>
     /// Represents a DataMiner Automation script.
@@ -106,39 +106,47 @@ namespace CoinMarketCap_1
         public void RunSafe(IEngine engine)
 		{
             var protocolName = "Exercise HTTP CoinMarketCap";
-            var marketTableID = 1000;
-            var cryptoListingTableID = 2000;
+            const int marketTableID = 1000;
+            const int cryptoListingTableID = 2000;
 
             IDms dms = engine.GetDms();
             var elements = dms.GetElements().Where(x => x.Protocol.Name == protocolName);
-            engine.GenerateInformation($"Preparing to export {elements.Count().ToString()} elements");
+            engine.Log($"Preparing to export {elements.Count().ToString()} elements");
             string folderPath = engine.GetScriptParam(2).Value;
-
-            if (elements != null && elements.Any())
+            if (!string.IsNullOrEmpty(folderPath))
             {
-                foreach (var element in elements)
+                if (elements != null && elements.Any())
                 {
-                    if (element.State.ToString() == "Active")
+                    foreach (var element in elements)
                     {
-                        string elementPath = folderPath + "\\" + element.Name + ".csv";
+                        if (element.State == ElementState.Active)
+                        {
+                            string elementPath = folderPath + "\\" + element.Name + ".csv";
 
-                        var marketTable = element.GetTable(marketTableID);
-                        var marketTableData = marketTable?.GetData();
-                        PrepareAndExportMarketDataTable(marketTableData, elementPath);
+                            var marketTable = element.GetTable(marketTableID);
+                            var marketTableData = marketTable?.GetData();
+                            var csvMarketData = PrepareMarketDataTable(marketTableData);
+                            ExportTableData(csvMarketData, elementPath, false);
 
-                        var cryptoListingTable = element.GetTable(cryptoListingTableID);
-                        var cryptoListingTableData = cryptoListingTable?.GetData();
-                        PrepareAndExportCryptoListingTable(cryptoListingTableData, elementPath);
+                            var cryptoListingTable = element.GetTable(cryptoListingTableID);
+                            var cryptoListingTableData = cryptoListingTable?.GetData();
+                            var csvCryptoListing = PrepareCryptoListingTable(cryptoListingTableData);
+                            ExportTableData(csvCryptoListing, elementPath, true);
+                        }
                     }
                 }
             }
+            else
+            {
+                engine.Log($"Folder path cannot be empty. Please provide a valid path.");
+            }
         }
 
-        public void PrepareAndExportMarketDataTable(IDictionary<string, object[]> tableData, string filePath)
+        public string PrepareMarketDataTable(IDictionary<string, object[]> tableData)
         {
             var columns = typeof(MarketTable)
            .GetFields(BindingFlags.Public | BindingFlags.Static)
-           .Select(f => f.GetValue(null)?.ToString()).ToArray();
+           .Select(folder => folder.GetValue(null)?.ToString()).ToArray();
 
             int dateIndex = Array.IndexOf(columns, MarketTable.lastUpdated);
 
@@ -150,19 +158,19 @@ namespace CoinMarketCap_1
                 }
             }
 
-            ExportTableData(columns, tableData, filePath, false);
+            return BuildCsvContent(columns, tableData);
         }
 
-        public void PrepareAndExportCryptoListingTable(IDictionary<string, object[]> tableData, string filePath)
+        public string PrepareCryptoListingTable(IDictionary<string, object[]> tableData)
         {
             var columns = typeof(CryptoListingTable)
            .GetFields(BindingFlags.Public | BindingFlags.Static)
-           .Select(f => f.GetValue(null)?.ToString()).ToArray();
+           .Select(folder => folder.GetValue(null)?.ToString()).ToArray();
 
-            ExportTableData(columns, tableData, filePath, true);
+            return BuildCsvContent(columns, tableData);
         }
 
-        public void ExportTableData(string[] columns, IDictionary<string, object[]> tableData, string filePath, bool append)
+        public void ExportTableData(string data, string filePath, bool append)
         {
             var directory = Path.GetDirectoryName(filePath);
             if (Directory.Exists(directory))
@@ -175,23 +183,31 @@ namespace CoinMarketCap_1
                         writer.Flush();
                     }
 
-                    writer.WriteLine(string.Join(",", columns));
+                    writer.Write(data);
                     writer.Flush();
-
-                    if (tableData != null && tableData.Any())
-                    {
-                        foreach (object[] rowValue in tableData.Values)
-                        {
-                            writer.WriteLine(string.Join(",", rowValue));
-                            writer.Flush();
-                        }
-                    }
                 }
             }
             else
             {
                 throw new DirectoryNotFoundException($"The folder path '{directory}' does not exist.");
             }
+        }
+
+        public string BuildCsvContent(string[] columns, IDictionary<string, object[]> tableData)
+        {
+            var stringBuilder = new StringBuilder();
+
+            stringBuilder.AppendLine(string.Join(",", columns));
+
+            if (tableData != null && tableData.Any())
+            {
+                foreach (object[] rowValue in tableData.Values)
+                {
+                    stringBuilder.AppendLine(string.Join(",", rowValue));
+                }
+            }
+
+            return stringBuilder.ToString();
         }
     }
 }

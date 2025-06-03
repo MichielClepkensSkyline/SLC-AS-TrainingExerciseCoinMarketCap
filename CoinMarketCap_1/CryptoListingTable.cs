@@ -1,6 +1,6 @@
 ﻿namespace CoinMarketCap_1
 {
-    internal class CryptoListingTable
+    public class CryptoListingTable
     {
         public static string marketRank = "Market Rank";
         public static string cryptocurrencyName = "Cryptocurrency Name";
