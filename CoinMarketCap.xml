@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <DMSScript options="272" xmlns="http://www.skyline.be/automation">
 	<Name>CoinMarketCap</Name>
-	<Description></Description>
+	<Description>CoinMarketCap_1.0.0.1</Description>
 	<Type>Automation</Type>
-	<Author>SKYLINE2\XXX</Author>
+	<Author>SKYLINE2\LPA</Author>
 	<CheckSets>FALSE</CheckSets>
 	<Folder></Folder>
 
