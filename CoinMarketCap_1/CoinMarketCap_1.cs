@@ -64,8 +64,6 @@ namespace CoinMarketCap_1
     /// </summary>
     public class Script
     {
-        private IEngine engine;
-
         /// <summary>
         /// The Script entry point.
         /// </summary>
@@ -74,108 +72,7 @@ namespace CoinMarketCap_1
         {
             try
             {
-                // Fixed params
-                const int tableId = 1000;
-                const string protocolName = "Exercise HTTP CoinMarketCap";
-
-                string folderName = engine.GetScriptParam(2).Value;
-                this.engine = engine;
-                IDms dms = engine.GetDms();
-
-                // Get all elements
-                var elements = dms.GetElements().Where(x => x.Protocol.Name == protocolName).ToArray();
-                string elementName1 = elements[3].Name;
-                string elementName2 = elements[1].Name;
-                string elementName3 = elements[2].Name;
-
-                // engine.GenerateInformation("Element: " + elements[2].Name);
-
-                // First element
-                var element1 = dms.GetElement(elementName1);
-                var table1 = element1.GetTable(tableId).GetData();
-                var path1 = CreatePath(folderName, elementName1);
-
-                // engine.GenerateInformation("Table1 count is: " + table1.Count);
-                WriteTableDataToCsvfile(table1, path1);
-
-                // Second element
-                var element2 = dms.GetElement(elementName2);
-                var table2 = element1.GetTable(tableId).GetData();
-                var path2 = CreatePath(folderName, elementName2);
-
-                // engine.GenerateInformation("Table2 count is: " + table2.Count);
-                WriteTableDataToCsvfile(table2, path2);
-
-                // Third element
-                var element3 = dms.GetElement(elementName3);
-                var table3 = element1.GetTable(tableId).GetData();
-                var path3 = CreatePath(folderName, elementName3);
-
-                // engine.GenerateInformation("Table3 count is: " + table3.Count);
-                WriteTableDataToCsvfile(table3, path3);
-
-                // Scheduler
-                var dma = dms.GetAgent(Engine.SLNetRaw.ServerDetails.AgentID);
-                var scheduler = dma.Scheduler;
-
-                DateTime startDate = DateTime.Now;
-                DateTime endDate = DateTime.Now.AddDays(2);
-
-                string activStartDay = startDate.ToString("yyyy - MM - dd");
-                string activStopDay = endDate.ToString("yyyy - MM - dd");
-
-                string startTime = startDate.ToString("HH: mm:ss");
-                string endTime = endDate.ToString("HH: mm:ss");
-
-                string taskType = "daily";
-                string runInterval = "1"; // Run interval (x minutes(daily) / 1,…,31,101,102(monthly) / 1,3,5,7 (1=Monday, 7=Sunday)(weekly))
-
-                string scriptName = "CoinMarketCap";
-                string elemLinked = string.Empty;
-                string paramLinked = string.Empty;
-                string taskName = "GetRefreshData";
-                string taskDescription = "Get refreshed data and store him in CSV files.";
-
-                object[] data = new object[]
-                {
-                    new object []
-                    {
-                        new string []
-                        {
-                            taskName,
-                            activStartDay,
-                            activStopDay,
-                            startTime,
-                            taskType,
-                            runInterval,
-                            string.Empty,
-                            taskDescription,
-                            "TRUE",
-                            endTime,
-                            string.Empty,
-                        },
-                    },
-                    new object[]
-                       {
-                        new string[]
-                        {
-                            "automation",
-                            scriptName,
-                            elemLinked,
-                            paramLinked,
-                            // elem2Linked,
-                            "CHECKSETS:FALSE",
-                            "DEFER: False",
-                        },
-                       },
-                    new object[] {},
-                };
-
-                int taskId = scheduler.CreateTask(data);
-                engine.GenerateInformation("Task id: " + taskId);
-
-                engine.SetFlag(RunTimeFlags.NoKeyCaching);
-                engine.Timeout = TimeSpan.FromHours(10);
+                RunSafe(engine);
             }
             catch (ScriptAbortException)
             {
@@ -199,26 +96,84 @@ namespace CoinMarketCap_1
             }
         }
 
-        private void WriteTableDataToCsvfile(IDictionary<string, object[]> tableData, string path)
+        public void RunSafe(IEngine engine)
         {
-            using (StreamWriter streamWriter = new StreamWriter(path))
-            {
-                int lastUpdateColumnId = 3;
-                streamWriter.WriteLine(string.Join(",", "Rank", "Name", "Symbol", "Last Update", "Makret Cap", "Circulating Suppy", "Price", "1h%", "24h%", "7d%" ));
-                streamWriter.Flush();
+            engine.SetFlag(RunTimeFlags.NoKeyCaching);
+            engine.Timeout = TimeSpan.FromHours(10);
 
-                foreach (object[] row in tableData.Values)
+            // Fixed params
+            const int tableId = 1000;
+            const string protocolName = "Exercise HTTP CoinMarketCap";
+            const int lastUpdateColumnId = 3; // Last Update column id
+
+            var columns = new List<string>
+            {
+               "Rank", "Name", "Symbol", "Last Update", "Market Cap", "Circulating Supply", "Price", "1h%", "24h%", "7d%",
+            };
+
+            string folderName = engine.GetScriptParam(2).Value;
+            IDms dms = engine.GetDms();
+
+            var elements = dms.GetElements().Where(protocol => protocol.Protocol.Name == protocolName).ToList(); // Get all elements
+
+            if (elements.Count > 1)
+            {
+                for (int i = 1; i < elements.Count; i++) // Starts with 1 because I have 4 elements with protocol Exercise HTTP CoinMarketCap
                 {
-                    row[lastUpdateColumnId] = DateTime.FromOADate((double)row[3]);
-                    streamWriter.WriteLine(string.Join(",", row));
-                    streamWriter.Flush();
+                    var element = elements[i];
+                    if (element.State == ElementState.Active)
+                    {
+                        var path = CreatePath(folderName, element.Name);
+                        var tableData = element.GetTable(tableId).GetData();
+                        WriteTableDataToCsvfile(tableData, path, columns, lastUpdateColumnId);
+                    }
+                    else
+                    {
+                        engine.ExitFail($"Run|Element {element.Name} is not Active");
+                    }
                 }
+            }
+            else
+            {
+                engine.ExitFail("Run|No elements found using protocol '" + protocolName + "'");
             }
         }
 
-        private string CreatePath(string folderName, string elementName)
+        public string CreatePath(string folderName, string elementName)
         {
-            return "C:\\Skyline DataMiner\\Documents\\"+ folderName + "\\" + elementName + ".csv";
+            if (string.IsNullOrWhiteSpace(elementName))
+            {
+                throw new Exception($"Element name {elementName} is empty!");
+            }
+
+            folderName = string.IsNullOrWhiteSpace(folderName) ? "CSV files" : folderName;
+            return $"C:\\Skyline DataMiner\\Documents\\{folderName}\\{elementName}.csv";
+        }
+
+        public void WriteTableDataToCsvfile(IDictionary<string, object[]> tableData, string path, List<string> columns, int lastUpdateColumnId)
+        {
+            using (StreamWriter writer = new StreamWriter(path))
+            {
+                writer.WriteLine(string.Join(",", columns));
+                writer.Flush();
+
+                if (tableData.Count > 0)
+                {
+                    foreach (object[] row in tableData.Values)
+                    {
+                        if (row[lastUpdateColumnId] is double oaDate)
+                        {
+                            row[lastUpdateColumnId] = DateTime.FromOADate(oaDate);
+                        }
+
+                        writer.WriteLine(string.Join(",", row));
+                    }
+                }
+                else
+                {
+                    throw new Exception("Table is empty!");
+                }
+            }
         }
     }
 }
