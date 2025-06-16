@@ -55,6 +55,7 @@ namespace CoinMarketCap_1
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Text;
     using Skyline.DataMiner.Automation;
     using Skyline.DataMiner.Core.DataMinerSystem.Automation;
     using Skyline.DataMiner.Core.DataMinerSystem.Common;
@@ -105,32 +106,28 @@ namespace CoinMarketCap_1
             const int tableId = 1000;
             const string protocolName = "Exercise HTTP CoinMarketCap";
             const int lastUpdateColumnId = 3; // Last Update column id
+            const int folderNameScriptParameterId = 2;
 
             var columns = new List<string>
             {
                "Rank", "Name", "Symbol", "Last Update", "Market Cap", "Circulating Supply", "Price", "1h%", "24h%", "7d%",
             };
 
-            string folderName = engine.GetScriptParam(2).Value;
+            string folderName = engine.GetScriptParam(folderNameScriptParameterId).Value;
             IDms dms = engine.GetDms();
 
-            var elements = dms.GetElements().Where(protocol => protocol.Protocol.Name == protocolName).ToList(); // Get all elements
+            var elements = dms.GetElements().
+                Where(protocol => protocol.Protocol.Name == protocolName).
+                Where(element=>element.State == ElementState.Active).ToList(); // Get all active elements
 
-            if (elements.Count > 1)
+            if (elements.Count > 0)
             {
-                for (int i = 1; i < elements.Count; i++) // Starts with 1 because I have 4 elements with protocol Exercise HTTP CoinMarketCap
+                for (int i = 0; i < elements.Count; i++)
                 {
                     var element = elements[i];
-                    if (element.State == ElementState.Active)
-                    {
-                        var path = CreatePath(folderName, element.Name);
-                        var tableData = element.GetTable(tableId).GetData();
-                        WriteTableDataToCsvfile(tableData, path, columns, lastUpdateColumnId);
-                    }
-                    else
-                    {
-                        engine.ExitFail($"Run|Element {element.Name} is not Active");
-                    }
+                    var path = CreatePath(folderName, element.Name);
+                    var tableData = element.GetTable(tableId).GetData();
+                    WriteTableDataToCsvfile(tableData, path, columns, lastUpdateColumnId);
                 }
             }
             else
@@ -152,10 +149,12 @@ namespace CoinMarketCap_1
 
         public void WriteTableDataToCsvfile(IDictionary<string, object[]> tableData, string path, List<string> columns, int lastUpdateColumnId)
         {
-            using (StreamWriter writer = new StreamWriter(path))
+            var directory = Path.GetDirectoryName(path);
+            if (Directory.Exists(directory))
             {
-                writer.WriteLine(string.Join(",", columns));
-                writer.Flush();
+                var stringBuilder = new StringBuilder();
+
+                stringBuilder.AppendLine(string.Join(",", columns));
 
                 if (tableData.Count > 0)
                 {
@@ -166,13 +165,19 @@ namespace CoinMarketCap_1
                             row[lastUpdateColumnId] = DateTime.FromOADate(oaDate);
                         }
 
-                        writer.WriteLine(string.Join(",", row));
+                        stringBuilder.AppendLine(string.Join(",", row));
                     }
+
+                    File.WriteAllText(path, stringBuilder.ToString());
                 }
                 else
                 {
                     throw new Exception("Table is empty!");
                 }
+            }
+            else
+            {
+                throw new DirectoryNotFoundException($"The folder path '{directory}' does not exist.");
             }
         }
     }
