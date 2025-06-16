@@ -108,11 +108,13 @@ namespace CoinMarketCap_1
             var protocolName = "Exercise HTTP CoinMarketCap";
             const int marketTableID = 1000;
             const int cryptoListingTableID = 2000;
+            const int folderPathScriptParameterId = 2;
 
             IDms dms = engine.GetDms();
             var elements = dms.GetElements().Where(x => x.Protocol.Name == protocolName);
+            elements = elements.Where(x => x.State == ElementState.Active);
             engine.Log($"Preparing to export {elements.Count().ToString()} elements");
-            string folderPath = engine.GetScriptParam(2).Value;
+            string folderPath = engine.GetScriptParam(folderPathScriptParameterId).Value;
             if (!string.IsNullOrEmpty(folderPath))
             {
                 if (elements != null && elements.Any())
