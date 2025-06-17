@@ -104,27 +104,26 @@ namespace CoinMarketCap_1
 
         private void RunSafe(IEngine engine)
         {
+            string connectorName = "Exercise HTTP CoinMarketCap";
             const int tableID = 100;
             string folderPath = FolderPath(engine);
             if (string.IsNullOrWhiteSpace(folderPath))
             {
                 engine.ExitFail("Invalid folder path specified.");
-                return;
             }
 
             var dms = engine.GetDms();
             if (dms == null)
             {
                 engine.ExitFail("Could not retrieve DMS system.");
-                return;
             }
 
             var httpCoinMarketCapElements = dms.GetElements().
                 Where(element => element.Protocol.Name.
-                Contains("Exercise HTTP CoinMarketCap")).ToArray();
+                Contains(connectorName) && element.State == ElementState.Active).ToArray();
             if (httpCoinMarketCapElements.IsNullOrEmpty())
             {
-                engine.ExitFail($"Elements with protocol name \"Exercise HTTP CoinMarketCap\" doesn't exist.");
+                engine.ExitFail($"Elements with protocol name \"{connectorName}\" doesn't exist.");
             }
 
             foreach (var element in httpCoinMarketCapElements)
@@ -134,16 +133,11 @@ namespace CoinMarketCap_1
                 if (table == null)
                 {
                     engine.ExitFail($"Could not retrieve Table with ID: {tableID}");
-                    return;
                 }
 
                 var tableData = table.GetData();
-
-                if (element.State == ElementState.Active)
-                {
-                    string csvFilePath = Path.Combine(folderPath, elementName + ".csv");
-                    WriteDataToCsv(tableData, csvFilePath);
-                }
+                string csvFilePath = Path.Combine(folderPath, elementName + ".csv");
+                WriteDataToCsv(tableData, csvFilePath);
             }
         }
 
@@ -172,11 +166,11 @@ namespace CoinMarketCap_1
 
                             if (i == 3)
                             {
-                                processedValue = ConvertToDate(field);
+                                processedValue = ConvertToFormattedDate(field, false); // Only date
                             }
                             else if (i == 4)
                             {
-                                processedValue = ConvertToDateTime(field);
+                                processedValue = ConvertToFormattedDate(field, true); // Date + time
                             }
                             else if (i == 2 || i == 6)
                             {
@@ -210,7 +204,8 @@ namespace CoinMarketCap_1
             {
                 return "\t" + field.ToString();
             }
-            return "\t" + field.ToString();
+
+            return field.ToString();
         }
 
         private string EscapeCsvField(object field)
@@ -228,34 +223,21 @@ namespace CoinMarketCap_1
             return str;
         }
 
-        private string ConvertToDate(object field)
+        private string ConvertToFormattedDate(object field, bool includeTime)
         {
             if (field == null)
                 return string.Empty;
 
             if (double.TryParse(field.ToString(), out double dateValue))
             {
-                // Convert Excel numeric date to Date
                 DateTime date = DateTime.FromOADate(dateValue);
-                return "\t" + date.ToString("yyyy-MM-dd"); // Add tab to prevent Excel auto-formatting
+                string format = includeTime ? "yyyy-MM-dd HH:mm:ss" : "yyyy-MM-dd";
+                return "\t" + date.ToString(format); // Prevent Excel auto-formatting
             }
 
             return "\t" + field.ToString();
         }
 
-        private string ConvertToDateTime(object field)
-        {
-            if (field == null) return "";
-
-            if (double.TryParse(field.ToString(), out double dateValue))
-            {
-                // Convert Excel numeric date to DateTime
-                DateTime date = DateTime.FromOADate(dateValue);
-                return "\t" + date.ToString("yyyy-MM-dd HH:mm:ss");
-            }
-
-            return "\t" + field.ToString();
-        }
 
         private string FolderPath(IEngine engine)
         {
