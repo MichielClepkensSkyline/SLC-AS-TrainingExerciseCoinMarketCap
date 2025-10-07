@@ -123,6 +123,31 @@ namespace CoinMarketCap_1
 				var elementShow = elements.ElementAt(i);
 				//engine.Log($"DBG Tajana| Element {i + 1}: Name = {elementShow.Name}, ID = {elementShow.Id}.");
 			}
+
+			var latestListingTableId = 100;
+
+			var element = elements.ElementAt(1);
+
+			IDmsTable lastListingTable = element.GetTable(latestListingTableId);
+
+			var data = lastListingTable.GetData();
+			var csvBuilder = new StringBuilder();
+
+			string filePath = @"C:\Skyline DataMiner\Documents\SLC-AS-TrainingExerciseCoinMarketCap\m.csv";
+
+			using (var writer = new StreamWriter(filePath, false, Encoding.UTF8))
+
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			{
+				foreach (var row in data.Values)
+				{
+					foreach (var item in row)
+					{
+						writer.Write(item?.ToString() + ",");
+					}
+					writer.WriteLine();
+				}
+			}
 		}
 	}
 }
