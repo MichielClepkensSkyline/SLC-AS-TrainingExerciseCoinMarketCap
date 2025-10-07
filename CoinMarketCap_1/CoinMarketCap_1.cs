@@ -45,7 +45,7 @@ Revision History:
 
 DATE		VERSION		AUTHOR			COMMENTS
 
-11/01/2024	1.0.0.1		SKF, Skyline	Initial version
+07/10/2025	1.0.0.1		SKF, Skyline	Initial version
 ****************************************************************************
 */
 
@@ -56,7 +56,9 @@ namespace CoinMarketCap_1
 	using System.Globalization;
 	using System.Text;
 	using Skyline.DataMiner.Automation;
-	
+	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
+	using Skyline.DataMiner.Core.DataMinerSystem.Common;
+
 	/// <summary>
 	/// Represents a DataMiner Automation script.
 	/// </summary>
