@@ -76,6 +76,10 @@ namespace CoinMarketCap_1
 				engine.ExitFail("Initialization failed");
 			}
 
+			// Get the table with cryptocurrencies information in it
+			coinMarketCapElement.GetLastListings();
+
+			// IDms thisDms = engine.GetDms();
 		}
 
 		private bool Initialize(IEngine engine)
