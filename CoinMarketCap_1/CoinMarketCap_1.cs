@@ -64,13 +64,33 @@ namespace CoinMarketCap_1
 	/// </summary>
 	public class Script
 	{
+		private CoinMarketCapElement coinMarketCapElement;
 		/// <summary>
 		/// The script entry point.
 		/// </summary>
 		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
-	
+			if (!Initialize(engine))
+			{
+				engine.ExitFail("Initialization failed");
+			}
+
+		}
+
+		private bool Initialize(IEngine engine)
+		{
+			try
+			{
+				coinMarketCapElement = new CoinMarketCapElement(engine);
+			}
+			catch (Exception e)
+			{
+				engine.Log("Initializing CoinMarketCap element failed: " + e);
+				return false;
+			}
+
+			return true;
 		}
 	}
 }
