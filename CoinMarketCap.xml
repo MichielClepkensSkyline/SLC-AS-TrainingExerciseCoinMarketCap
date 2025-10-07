@@ -1,13 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <DMSScript options="272" xmlns="http://www.skyline.be/automation">
-	<Name>CoinMarketCap</Name>
-	<Description></Description>
+	<Name>CoinMarketCap Sofian</Name>
+	<Description>This automation script is made during training.</Description>
 	<Type>Automation</Type>
-	<Author>SKYLINE2\XXX</Author>
+	<Author>SKYLINE2\SKF</Author>
 	<CheckSets>FALSE</CheckSets>
-	<Folder></Folder>
+	<Folder>Sofian</Folder>
 
 	<Protocols>
+		<Protocol id="2">
+			<Description>coinMarketCap</Description>
+			<Name>Exercise HTTP CoinMarketCap Sofian</Name>
+			<Version>Production</Version>
+			<DefaultElement></DefaultElement>
+		</Protocol>
 	</Protocols>
 
 	<Memory>
