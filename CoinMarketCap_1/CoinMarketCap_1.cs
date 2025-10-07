@@ -1,6 +1,6 @@
 /*
 ****************************************************************************
-*  Copyright (c) 2024,  Skyline Communications NV  All Rights Reserved.    *
+*  Copyright (c) 2025,  Skyline Communications NV  All Rights Reserved.    *
 ****************************************************************************
 
 By using this script, you expressly agree with the usage terms and
@@ -45,18 +45,27 @@ Revision History:
 
 DATE		VERSION		AUTHOR			COMMENTS
 
-11/01/2024	1.0.0.1		XXX, Skyline	Initial version
+11/01/2024	1.0.0.1		TSA, Skyline	Initial version
 ****************************************************************************
 */
 
 namespace CoinMarketCap_1
 {
+	using CsvHelper;
+
+	using Skyline.DataMiner.Automation;
+	using Skyline.DataMiner.Automation.Logging;
+	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
+	using Skyline.DataMiner.Core.DataMinerSystem.Common;
+	using Skyline.DataMiner.Net.Helper;
+
 	using System;
 	using System.Collections.Generic;
 	using System.Globalization;
+	using System.IO;
+	using System.Linq;
 	using System.Text;
-	using Skyline.DataMiner.Automation;
-	
+
 	/// <summary>
 	/// Represents a DataMiner Automation script.
 	/// </summary>
@@ -68,7 +77,52 @@ namespace CoinMarketCap_1
 		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
-	
+			try
+			{
+				RunSafe(engine);
+			}
+			catch (ScriptAbortException)
+			{
+				throw;
+			}
+			catch (ScriptForceAbortException)
+			{
+				throw;
+			}
+			catch (ScriptTimeoutException)
+			{
+				throw;
+			}
+			catch (InteractiveUserDetachedException)
+			{
+				throw;
+			}
+			catch (Exception e)
+			{
+				engine.Log("Run|Something went wrong: " + e);
+			}
+		}
+
+		private void RunSafe(IEngine engine)
+		{
+
+			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
+			var dms = engine.GetDms();
+
+			if (dms == null)
+			{
+				return;
+			}
+
+			List<IDmsElement> elements = dms.GetElements().Where(p => p.Protocol.Name == protocolName).Where(x => x.State == ElementState.Active).ToList();
+
+			//engine.Log($"DBG Tajana| Protocol name: {protocolName}.");
+
+			for (int i = 0; i < elements.Count(); i++)
+			{
+				var elementShow = elements.ElementAt(i);
+				//engine.Log($"DBG Tajana| Element {i + 1}: Name = {elementShow.Name}, ID = {elementShow.Id}.");
+			}
 		}
 	}
 }
