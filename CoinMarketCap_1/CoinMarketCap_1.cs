@@ -59,6 +59,7 @@ namespace CoinMarketCap_1
 	using Skyline.DataMiner.Core.DataMinerSystem.Common;
 	using Skyline.DataMiner.Core.DataMinerSystem.Common.Selectors;
 	using Skyline.DataMiner.Net.Helper;
+	using Skyline.DataMiner.Net.Messages.SLDataGateway;
 	using Skyline.DataMiner.Utils.SecureCoding.SecureIO;
 
 	using System;
@@ -127,15 +128,6 @@ namespace CoinMarketCap_1
 			}
 		}
 
-		public SecurePath FormPath(IEngine engine, string elementName)
-		{
-			string filePath = $"C:\\Skyline DataMiner\\Documents\\{engine.GetScriptParam("Folder Name").Value}\\{elementName}.csv";
-			SecurePath securePath = SecurePath.CreateSecurePath(filePath);
-
-			//engine.Log($"File path: {filePath}", LogType.Debug, 0);
-			return securePath;
-		}
-
 		public List<IDmsElement> GetActiveElementsForSpecificProtocol(IDms dms, string protocolName)
 		{
 			return dms.GetElements().Where(p => p.Protocol.Name == protocolName && p.State == ElementState.Active).ToList();
@@ -146,7 +138,9 @@ namespace CoinMarketCap_1
 			var csvBuilder = new StringBuilder();
 			IDmsTable lastListingTable = element.GetTable(latestListingTableId);
 			var data = lastListingTable.GetData();
+
 			SecurePath filePath = FormPath(engine, element.Name);
+
 			using (var writer = new StreamWriter(filePath, false, Encoding.UTF8))
 
 			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
@@ -156,31 +150,42 @@ namespace CoinMarketCap_1
 					csv.WriteField(colName);
 				}
 
-
 				csv.NextRecord();
 
-				foreach (var row in data.Values)
+				WriteRows(csv, data.Values);
+			}
+		}
+
+		public SecurePath FormPath(IEngine engine, string elementName)
+		{
+			string filePath = $"C:\\Skyline DataMiner\\Documents\\{engine.GetScriptParam("Folder Name").Value}\\{elementName}.csv";
+			SecurePath securePath = SecurePath.CreateSecurePath(filePath);
+
+			return securePath;
+		}
+
+		public void WriteRows(CsvWriter csv, IEnumerable<IList<object>> data)
+		{
+			foreach (var row in data)
+			{
+				int colIndex = 0;
+
+				foreach (var item in row)
 				{
-					int colIndex = 0;
-
-					foreach (var item in row)
+					if ((colIndex == 3 || colIndex == 6) && double.TryParse(item?.ToString(), out double oaDate))
 					{
-						if ((colIndex == 3 || colIndex == 6) && double.TryParse(item?.ToString(), out double oaDate))
-						{
-							DateTime dt = DateTime.FromOADate(oaDate);
-							csv.WriteField(dt.ToString("yyyy-MM-dd HH:mm:ss"));
-						}
-						else
-						{
-							csv.WriteField(item?.ToString());
-						}
-
-						colIndex++;
+						DateTime dt = DateTime.FromOADate(oaDate);
+						csv.WriteField(dt.ToString("yyyy-MM-dd HH:mm:ss"));
+					}
+					else
+					{
+						csv.WriteField(item?.ToString());
 					}
 
-					csv.NextRecord();
+					colIndex++;
 				}
 
+				csv.NextRecord();
 			}
 		}
 	}
