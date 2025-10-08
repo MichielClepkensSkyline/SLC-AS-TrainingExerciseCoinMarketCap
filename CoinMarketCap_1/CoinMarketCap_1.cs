@@ -57,6 +57,7 @@ namespace CoinMarketCap_1
 	using System.IO;
 	using System.Linq;
 	using System.Text;
+	using CsvHelper;
 	using Skyline.DataMiner.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Common;
@@ -94,8 +95,29 @@ namespace CoinMarketCap_1
 			{
 				engine.Log(element.GetName());
 			}
+
+			// Create a csv file for every CoinMarketCap Element
+			foreach (CoinMarketCapElement element in coinMarketCapElements)
+			{
+				StreamWriter writer = new StreamWriter($"C:\\Skyline DataMiner\\Documents\\SLC-AS-TrainingExerciseCoinMarketCap\\test_{element.GetName()}.csv");
+				CsvWriter csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
+
+				IDictionary<string, object[]> tabledata = element.GetCryptocurrenciesTable();
+				string key = tabledata.Keys.First();
+				object[] row = tabledata[key];
+				foreach (var item in row)
+				{
+					engine.Log(item.ToString(), LogType.Information, 0);
+				}
+				// csvWriter.WriteHeader()
+				// csvWriter.WriteRecord<object[]>(row);
+				// csvWriter.WriteRecord("Tst");
+			}
+			
+			// List<IDmsElement> elements = dms.GetElements();
+
 			// Get the table with cryptocurrencies information in it
-			coinMarketCapElement.GetLastListings();
+			// coinMarketCapElement.GetLastListings();
 
 			// IDms thisDms = engine.GetDms();
 		}
