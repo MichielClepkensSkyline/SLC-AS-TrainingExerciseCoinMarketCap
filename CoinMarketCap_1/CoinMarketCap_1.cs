@@ -134,6 +134,7 @@ namespace CoinMarketCap_1
 
 			string[] columnNames = new[] { "ID", "Name", "Symbol", "Date Added", "Circulating supply", "Rank", "Last Updated", "Quote Price", "1h Change", "Volume Change (24h)", "Market Cap", "Platform Name", "Maximum supply", "Market Cap Dominance", "Volume (24h)",  "Display Key" };
 
+			int lastUpdateColumn = 3;
 			foreach (var element in elements)
 			{
 				IDmsTable lastListingTable = element.GetTable(latestListingTableId);
@@ -153,13 +154,26 @@ namespace CoinMarketCap_1
 
 					foreach (var row in data.Values)
 					{
+						int colIndex = 0;
+
 						foreach (var item in row)
 						{
-							csv.WriteField(item?.ToString());
+							if ((colIndex == 3 || colIndex == 6) && double.TryParse(item?.ToString(), out double oaDate))
+							{
+								DateTime dt = DateTime.FromOADate(oaDate);
+								csv.WriteField(dt.ToString("yyyy-MM-dd HH:mm:ss"));
+							}
+							else
+							{
+								csv.WriteField(item?.ToString());
+							}
+
+							colIndex++;
 						}
 
 						csv.NextRecord();
 					}
+
 				}
 			}
 		}
