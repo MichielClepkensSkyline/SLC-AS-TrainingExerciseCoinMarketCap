@@ -54,10 +54,13 @@ namespace CoinMarketCap_1
 	using System;
 	using System.Collections.Generic;
 	using System.Globalization;
+	using System.IO;
+	using System.Linq;
 	using System.Text;
 	using Skyline.DataMiner.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Common;
+	using Skyline.DataMiner.Net.Messages.SLDataGateway;
 
 	/// <summary>
 	/// Represents a DataMiner Automation script.
@@ -77,6 +80,20 @@ namespace CoinMarketCap_1
 				engine.ExitFail("Initialization failed");
 			}
 
+			// Get all elements with the CoinMarketCap protocol
+			List<IDmsElement> elements = (List<IDmsElement>)dms.GetElements();
+			foreach (IDmsElement element in elements)
+			{
+				if (element.Protocol.Name == "Exercise HTTP CoinMarketCap Sofian")
+				{
+					InitializeElement(engine, element);
+				}
+			}
+
+			foreach (CoinMarketCapElement element in coinMarketCapElements)
+			{
+				engine.Log(element.GetName());
+			}
 			// Get the table with cryptocurrencies information in it
 			coinMarketCapElement.GetLastListings();
 
