@@ -116,54 +116,14 @@ namespace CoinMarketCap_1
 				return;
 			}
 
-			List<IDmsElement> elements = 
+			string[] columnNames = new[] { "ID", "Name", "Symbol", "Date Added", "Circulating supply", "Rank", "Last Updated", "Quote Price", "1h Change", "Volume Change (24h)", "Market Cap", "Platform Name", "Maximum supply", "Market Cap Dominance", "Volume (24h)", "Display Key" };
+
+			List<IDmsElement> elements = GetActiveElementsForSpecificProtocol(dms, protocolName);
 
 			var latestListingTableId = 100;
-			var csvBuilder = new StringBuilder();
-
-			string[] columnNames = new[] { "ID", "Name", "Symbol", "Date Added", "Circulating supply", "Rank", "Last Updated", "Quote Price", "1h Change", "Volume Change (24h)", "Market Cap", "Platform Name", "Maximum supply", "Market Cap Dominance", "Volume (24h)",  "Display Key" };
-
-			int lastUpdateColumn = 3;
 			foreach (var element in elements)
 			{
-				IDmsTable lastListingTable = element.GetTable(latestListingTableId);
-				var data = lastListingTable.GetData();
-				SecurePath filePath = FormPath(engine, element.Name);
-				using (var writer = new StreamWriter(filePath, false, Encoding.UTF8))
-
-				using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-				{
-					foreach (var colName in columnNames)
-					{
-						csv.WriteField(colName);
-					}
-
-
-					csv.NextRecord();
-
-					foreach (var row in data.Values)
-					{
-						int colIndex = 0;
-
-						foreach (var item in row)
-						{
-							if ((colIndex == 3 || colIndex == 6) && double.TryParse(item?.ToString(), out double oaDate))
-							{
-								DateTime dt = DateTime.FromOADate(oaDate);
-								csv.WriteField(dt.ToString("yyyy-MM-dd HH:mm:ss"));
-							}
-							else
-							{
-								csv.WriteField(item?.ToString());
-							}
-
-							colIndex++;
-						}
-
-						csv.NextRecord();
-					}
-
-				}
+				MakeCsvForOneElement(engine, element, latestListingTableId, columnNames);
 			}
 		}
 
@@ -179,6 +139,49 @@ namespace CoinMarketCap_1
 		public List<IDmsElement> GetActiveElementsForSpecificProtocol(IDms dms, string protocolName)
 		{
 			return dms.GetElements().Where(p => p.Protocol.Name == protocolName && p.State == ElementState.Active).ToList();
+		}
+
+		public void MakeCsvForOneElement(IEngine engine, IDmsElement element, int latestListingTableId, string[] columnNames)
+		{
+			var csvBuilder = new StringBuilder();
+			IDmsTable lastListingTable = element.GetTable(latestListingTableId);
+			var data = lastListingTable.GetData();
+			SecurePath filePath = FormPath(engine, element.Name);
+			using (var writer = new StreamWriter(filePath, false, Encoding.UTF8))
+
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			{
+				foreach (var colName in columnNames)
+				{
+					csv.WriteField(colName);
+				}
+
+
+				csv.NextRecord();
+
+				foreach (var row in data.Values)
+				{
+					int colIndex = 0;
+
+					foreach (var item in row)
+					{
+						if ((colIndex == 3 || colIndex == 6) && double.TryParse(item?.ToString(), out double oaDate))
+						{
+							DateTime dt = DateTime.FromOADate(oaDate);
+							csv.WriteField(dt.ToString("yyyy-MM-dd HH:mm:ss"));
+						}
+						else
+						{
+							csv.WriteField(item?.ToString());
+						}
+
+						colIndex++;
+					}
+
+					csv.NextRecord();
+				}
+
+			}
 		}
 	}
 }
