@@ -1,7 +1,10 @@
-﻿using Skyline.DataMiner.Automation;
+﻿using CsvHelper;
+using Skyline.DataMiner.Automation;
 using Skyline.DataMiner.Core.DataMinerSystem.Common;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +13,7 @@ namespace CoinMarketCap_1
 {
 	internal class CoinMarketCapElement
 	{
+		private const int TablePID = 200;
 		private readonly IEngine engine;
 		private readonly IDmsElement element;
 
@@ -18,7 +22,6 @@ namespace CoinMarketCap_1
 			this.engine = engine;
 			element = coinMarketCapElement;
 
-			// = engine.GetDummy("coinMarketCap");
 			if (!element.IsStartupComplete())
 			{
 				throw new ArgumentException("CoinMarketCap element is not active");
@@ -32,9 +35,17 @@ namespace CoinMarketCap_1
 
 		public IDictionary<string, object[]> GetCryptocurrenciesTable()
 		{
-			IDmsTable table = element.GetTable(200);
+			IDmsTable table = element.GetTable(TablePID);
 			IDictionary<string, object[]> tabledata = table.GetData();
 			return tabledata;
+		}
+
+		public CsvWriter MakeCsvWriter()
+		{
+			// TODO: add foutenafhandeling of zoiets
+			StreamWriter writer = new StreamWriter($"C:\\Skyline DataMiner\\Documents\\SLC-AS-TrainingExerciseCoinMarketCap\\test_{this.GetName()}.csv");
+			CsvWriter csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
+			return csvWriter;
 		}
 
 		/*public void GetLastListings()
