@@ -64,14 +64,15 @@ namespace CoinMarketCap_1
 	/// </summary>
 	public class Script
 	{
-		private CoinMarketCapElement coinMarketCapElement;
+		private static IDms dms;
+		private List<CoinMarketCapElement> coinMarketCapElements = new List<CoinMarketCapElement>();
 		/// <summary>
 		/// The script entry point.
 		/// </summary>
 		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
-			if (!Initialize(engine))
+			if (!InitializeDMS(engine))
 			{
 				engine.ExitFail("Initialization failed");
 			}
@@ -82,11 +83,26 @@ namespace CoinMarketCap_1
 			// IDms thisDms = engine.GetDms();
 		}
 
-		private bool Initialize(IEngine engine)
+		private bool InitializeDMS(IEngine engine)
 		{
 			try
 			{
-				coinMarketCapElement = new CoinMarketCapElement(engine);
+				dms = engine.GetDms();
+			}
+			catch (Exception e)
+			{
+				engine.Log("Initializing DMS failed: " + e);
+				return false;
+			}
+
+			return true;
+		}
+
+		private bool InitializeElement(IEngine engine, IDmsElement coinMarketCapElement)
+		{
+			try
+			{
+				coinMarketCapElements.Add(new CoinMarketCapElement(engine, coinMarketCapElement));
 			}
 			catch (Exception e)
 			{

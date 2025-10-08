@@ -12,7 +12,7 @@ namespace CoinMarketCap_1
 		private readonly IEngine engine;
 		private readonly IActionableElement element;
 
-		public CoinMarketCapElement(IEngine engine)
+		public CoinMarketCapElement(IEngine engine, IDmsElement coinMarketCapElement)
 		{
 			this.engine = engine;
 			element = engine.GetDummy("coinMarketCap");
