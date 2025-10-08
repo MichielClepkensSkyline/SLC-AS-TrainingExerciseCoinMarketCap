@@ -57,7 +57,9 @@ namespace CoinMarketCap_1
 	using Skyline.DataMiner.Automation.Logging;
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Common;
+	using Skyline.DataMiner.Core.DataMinerSystem.Common.Selectors;
 	using Skyline.DataMiner.Net.Helper;
+	using Skyline.DataMiner.Utils.SecureCoding.SecureIO;
 
 	using System;
 	using System.Collections.Generic;
@@ -126,28 +128,38 @@ namespace CoinMarketCap_1
 
 			var latestListingTableId = 100;
 
-			var element = elements.ElementAt(1);
+			//var element = elements.ElementAt(1);
 
-			IDmsTable lastListingTable = element.GetTable(latestListingTableId);
-
-			var data = lastListingTable.GetData();
 			var csvBuilder = new StringBuilder();
 
-			string filePath = @"C:\Skyline DataMiner\Documents\SLC-AS-TrainingExerciseCoinMarketCap\m.csv";
-
-			using (var writer = new StreamWriter(filePath, false, Encoding.UTF8))
-
-			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			foreach(var element in elements)
 			{
-				foreach (var row in data.Values)
+				IDmsTable lastListingTable = element.GetTable(latestListingTableId);
+				var data = lastListingTable.GetData();
+				SecurePath filePath = FormPath(engine, element.Name);
+				using (var writer = new StreamWriter(filePath, false, Encoding.UTF8))
+
+				using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 				{
-					foreach (var item in row)
+					foreach (var row in data.Values)
 					{
-						writer.Write(item?.ToString() + ",");
+						foreach (var item in row)
+						{
+							writer.Write(item?.ToString() + ",");
+						}
+						writer.WriteLine();
 					}
-					writer.WriteLine();
 				}
 			}
+		}
+
+		public SecurePath FormPath(IEngine engine, string elementName)
+		{
+			string filePath = $"C:\\Skyline DataMiner\\Documents\\{engine.GetScriptParam("Folder Name").Value}\\{elementName}.csv";
+			SecurePath securePath = SecurePath.CreateSecurePath(filePath);
+
+			//engine.Log($"File path: {filePath}", LogType.Debug, 0);
+			return securePath;
 		}
 	}
 }
