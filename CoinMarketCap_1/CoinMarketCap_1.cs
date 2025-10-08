@@ -132,7 +132,9 @@ namespace CoinMarketCap_1
 
 			var csvBuilder = new StringBuilder();
 
-			foreach(var element in elements)
+			string[] columnNames = new[] { "ID", "Name", "Symbol", "Date Added", "Circulating supply", "Rank", "Last Updated", "Quote Price", "1h Change", "Volume Change (24h)", "Market Cap", "Platform Name", "Maximum supply", "Market Cap Dominance", "Volume (24h)",  "Display Key" };
+
+			foreach (var element in elements)
 			{
 				IDmsTable lastListingTable = element.GetTable(latestListingTableId);
 				var data = lastListingTable.GetData();
@@ -141,13 +143,22 @@ namespace CoinMarketCap_1
 
 				using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 				{
+					foreach (var colName in columnNames)
+					{
+						csv.WriteField(colName);
+					}
+
+
+					csv.NextRecord();
+
 					foreach (var row in data.Values)
 					{
 						foreach (var item in row)
 						{
-							writer.Write(item?.ToString() + ",");
+							csv.WriteField(item?.ToString());
 						}
-						writer.WriteLine();
+
+						csv.NextRecord();
 					}
 				}
 			}
