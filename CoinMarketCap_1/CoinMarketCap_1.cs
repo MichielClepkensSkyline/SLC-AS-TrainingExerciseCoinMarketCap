@@ -116,20 +116,9 @@ namespace CoinMarketCap_1
 				return;
 			}
 
-			List<IDmsElement> elements = dms.GetElements().Where(p => p.Protocol.Name == protocolName).Where(x => x.State == ElementState.Active).ToList();
-
-			//engine.Log($"DBG Tajana| Protocol name: {protocolName}.");
-
-			for (int i = 0; i < elements.Count(); i++)
-			{
-				var elementShow = elements.ElementAt(i);
-				//engine.Log($"DBG Tajana| Element {i + 1}: Name = {elementShow.Name}, ID = {elementShow.Id}.");
-			}
+			List<IDmsElement> elements = 
 
 			var latestListingTableId = 100;
-
-			//var element = elements.ElementAt(1);
-
 			var csvBuilder = new StringBuilder();
 
 			string[] columnNames = new[] { "ID", "Name", "Symbol", "Date Added", "Circulating supply", "Rank", "Last Updated", "Quote Price", "1h Change", "Volume Change (24h)", "Market Cap", "Platform Name", "Maximum supply", "Market Cap Dominance", "Volume (24h)",  "Display Key" };
@@ -185,6 +174,11 @@ namespace CoinMarketCap_1
 
 			//engine.Log($"File path: {filePath}", LogType.Debug, 0);
 			return securePath;
+		}
+
+		public List<IDmsElement> GetActiveElementsForSpecificProtocol(IDms dms, string protocolName)
+		{
+			return dms.GetElements().Where(p => p.Protocol.Name == protocolName && p.State == ElementState.Active).ToList();
 		}
 	}
 }
