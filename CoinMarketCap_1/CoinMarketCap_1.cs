@@ -110,12 +110,7 @@ namespace CoinMarketCap_1
 		{
 
 			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
-			var dms = engine.GetDms();
-
-			if (dms == null)
-			{
-				return;
-			}
+			var dms = EnsureDms(engine);
 
 			string[] columnNames = new[] { "ID", "Name", "Symbol", "Date Added", "Circulating supply", "Rank", "Last Updated", "Quote Price", "1h Change", "Volume Change (24h)", "Market Cap", "Platform Name", "Maximum supply", "Market Cap Dominance", "Volume (24h)", "Display Key" };
 
@@ -127,6 +122,27 @@ namespace CoinMarketCap_1
 				MakeCsvForOneElement(engine, element, latestListingTableId, columnNames);
 			}
 		}
+
+		private IDms EnsureDms(IEngine engine)
+		{
+			try
+			{
+				var dms = engine.GetDms();
+				if (dms == null)
+				{
+					engine.Log("GetSafeDms|DMS is null.", LogType.Error, 0);
+					engine.ExitFail("DMS connection could not be established.");
+				}
+
+				return dms;
+			}
+			catch (Exception ex)
+			{
+				engine.Log("GetSafeDms|Exception while getting DMS: " + ex.Message, LogType.Error, 0);
+				engine.ExitFail("Exception while trying to get DMS.");
+			}
+		}
+
 
 		public List<IDmsElement> GetActiveElementsForSpecificProtocol(IDms dms, string protocolName)
 		{
