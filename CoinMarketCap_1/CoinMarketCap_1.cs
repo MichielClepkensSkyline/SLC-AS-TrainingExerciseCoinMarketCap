@@ -1,6 +1,6 @@
 /*
 ****************************************************************************
-*  Copyright (c) 2024,  Skyline Communications NV  All Rights Reserved.    *
+*  Copyright (c) 2025,  Skyline Communications NV  All Rights Reserved.    *
 ****************************************************************************
 
 By using this script, you expressly agree with the usage terms and
@@ -45,7 +45,7 @@ Revision History:
 
 DATE		VERSION		AUTHOR			COMMENTS
 
-11/01/2024	1.0.0.1		XXX, Skyline	Initial version
+11/01/2024	1.0.0.1		Emir, Skyline	Initial version
 ****************************************************************************
 */
 
@@ -56,11 +56,13 @@ namespace CoinMarketCap_1
 	using System.Globalization;
 	using System.Text;
 	using Skyline.DataMiner.Automation;
-	
-	/// <summary>
-	/// Represents a DataMiner Automation script.
-	/// </summary>
-	public class Script
+    using Skyline.DataMiner.Core.DataMinerSystem.Automation;
+    using Skyline.DataMiner.Core.DataMinerSystem.Common;
+
+    /// <summary>
+    /// Represents a DataMiner Automation script.
+    /// </summary>
+    public class Script
 	{
 		/// <summary>
 		/// The script entry point.
@@ -68,7 +70,44 @@ namespace CoinMarketCap_1
 		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
-	
-		}
-	}
+            try
+            {
+                RunSafe(engine);
+            }
+            catch (ScriptAbortException)
+            {
+                // Catch normal abort exceptions (engine.ExitFail or engine.ExitSuccess)
+                throw; // Comment if it should be treated as a normal exit of the script.
+            }
+            catch (ScriptForceAbortException)
+            {
+                // Catch forced abort exceptions, caused via external maintenance messages.
+                throw;
+            }
+            catch (ScriptTimeoutException)
+            {
+                // Catch timeout exceptions for when a script has been running for too long.
+                throw;
+            }
+            catch (InteractiveUserDetachedException)
+            {
+                // Catch a user detaching from the interactive script by closing the window.
+                // Only applicable for interactive scripts, can be removed for non-interactive scripts.
+                throw;
+            }
+            catch (Exception e)
+            {
+                engine.ExitFail("Run|Something went wrong: " + e);
+            }
+        }
+
+		private void RunSafe(IEngine engine)
+        {
+            // TODO: Define code here
+            engine.Log("EmirASCoinMarketCap|Start of the script");
+            IDms dms= engine.GetDms();
+            Data data = new Data();
+            data.GetData(dms,engine);
+        }
+    }
 }
