@@ -8,18 +8,15 @@
 	<Folder>Sofian</Folder>
 
 	<Protocols>
-		<Protocol id="2">
-			<Description>coinMarketCap</Description>
-			<Name>Exercise HTTP CoinMarketCap Sofian</Name>
-			<Version>Production</Version>
-			<DefaultElement></DefaultElement>
-		</Protocol>
 	</Protocols>
 
 	<Memory>
 	</Memory>
 
 	<Parameters>
+		<ScriptParameter id="3" type="string" values="">
+			<Description>folderName</Description>
+		</ScriptParameter>
 	</Parameters>
 
 	<Script>

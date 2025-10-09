@@ -51,18 +51,12 @@ DATE		VERSION		AUTHOR			COMMENTS
 
 namespace CoinMarketCap_1
 {
+	using System;
+	using System.Collections.Generic;
 	using CsvHelper;
 	using Skyline.DataMiner.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Common;
-	using Skyline.DataMiner.Net;
-	using Skyline.DataMiner.Net.Messages.SLDataGateway;
-	using System;
-	using System.Collections.Generic;
-	using System.Globalization;
-	using System.IO;
-	using System.Linq;
-	using System.Text;
 
 	/// <summary>
 	/// Represents a DataMiner Automation script.
@@ -71,7 +65,7 @@ namespace CoinMarketCap_1
 	{
 		private const string ProtocolName = "Exercise HTTP CoinMarketCap Sofian";
 		private static IDms dms;
-		private List<CoinMarketCapElement> coinMarketCapElements = new List<CoinMarketCapElement>();
+		private readonly List<CoinMarketCapElement> coinMarketCapElements = new List<CoinMarketCapElement>();
 		private List<TableRow> records;
 
 		/// <summary>
