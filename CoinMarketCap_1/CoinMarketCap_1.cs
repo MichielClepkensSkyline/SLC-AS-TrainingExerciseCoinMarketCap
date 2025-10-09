@@ -51,8 +51,13 @@ DATE		VERSION		AUTHOR			COMMENTS
 
 namespace CoinMarketCap_1
 {
+	using System;
+	using System.Collections.Generic;
+	using System.Globalization;
+	using System.IO;
+	using System.Linq;
+	using System.Text;
 	using CsvHelper;
-
 	using Skyline.DataMiner.Automation;
 	using Skyline.DataMiner.Automation.Logging;
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
@@ -61,13 +66,6 @@ namespace CoinMarketCap_1
 	using Skyline.DataMiner.Net.Helper;
 	using Skyline.DataMiner.Net.Messages.SLDataGateway;
 	using Skyline.DataMiner.Utils.SecureCoding.SecureIO;
-
-	using System;
-	using System.Collections.Generic;
-	using System.Globalization;
-	using System.IO;
-	using System.Linq;
-	using System.Text;
 
 	/// <summary>
 	/// Represents a DataMiner Automation script.
@@ -108,7 +106,6 @@ namespace CoinMarketCap_1
 
 		private void RunSafe(IEngine engine)
 		{
-
 			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
 			var dms = EnsureDms(engine);
 
@@ -130,7 +127,6 @@ namespace CoinMarketCap_1
 				var dms = engine.GetDms();
 				if (dms == null)
 				{
-					engine.Log("GetSafeDms|DMS is null.", LogType.Error, 0);
 					engine.ExitFail("DMS connection could not be established.");
 				}
 
@@ -138,11 +134,10 @@ namespace CoinMarketCap_1
 			}
 			catch (Exception ex)
 			{
-				engine.Log("GetSafeDms|Exception while getting DMS: " + ex.Message, LogType.Error, 0);
-				engine.ExitFail("Exception while trying to get DMS.");
+				engine.ExitFail("EnsureDms|Exception while getting DMS: " + ex.Message);
+				return null;
 			}
 		}
-
 
 		public List<IDmsElement> GetActiveElementsForSpecificProtocol(IDms dms, string protocolName)
 		{
@@ -174,9 +169,21 @@ namespace CoinMarketCap_1
 
 		public SecurePath FormPath(IEngine engine, string elementName)
 		{
-			string filePath = $"C:\\Skyline DataMiner\\Documents\\{engine.GetScriptParam("Folder Name").Value}\\{elementName}.csv";
-			SecurePath securePath = SecurePath.CreateSecurePath(filePath);
+			string folderName = engine.GetScriptParam("Folder Name").Value;
 
+			if (String.IsNullOrWhiteSpace(folderName))
+			{
+				engine.ExitFail("FormPath|Script parameter 'Folder Name' is null or whitespace.");
+			}
+
+			string folderPath = SecurePath.ConstructSecurePath("C:\\Skyline DataMiner\\Documents", folderName);
+
+			if (!Directory.Exists(folderPath))
+			{
+				Directory.CreateDirectory(folderPath);
+			}
+
+			SecurePath securePath = SecurePath.ConstructSecurePath(folderPath, $"{elementName}.csv");
 			return securePath;
 		}
 
