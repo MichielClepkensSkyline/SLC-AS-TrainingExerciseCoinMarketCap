@@ -64,6 +64,7 @@ namespace CoinMarketCap_1
 	public class Script
 	{
 		private const string ProtocolName = "Exercise HTTP CoinMarketCap Sofian";
+		private const string ProtocolVersion = "Production";
 		private static IDms dms;
 		private readonly List<CoinMarketCapElement> coinMarketCapElements = new List<CoinMarketCapElement>();
 		private List<TableRow> records;
@@ -74,43 +75,71 @@ namespace CoinMarketCap_1
 		/// <param name="engine">Link with SLAutomation process.</param>
 		public void Run(IEngine engine)
 		{
-			if (!InitializeDMS(engine))
+			try
 			{
-				engine.ExitFail("Initialization engine failed");
-			}
-
-			// Get all elements with the CoinMarketCap protocol
-			List<IDmsElement> elements = (List<IDmsElement>)dms.GetElements();
-			foreach (IDmsElement element in elements)
-			{
-				if (element.Protocol.Name == ProtocolName)
+				if (!InitializeDMS(engine))
 				{
-					InitializeElement(engine, element);
+					engine.ExitFail("Initialization engine failed");
+				}
+
+				// Get all elements with the CoinMarketCap protocol
+				GetCoinMarketCapElements(engine);
+
+				// Check if there are elements with the CoinMarketCap protocol
+				if (coinMarketCapElements.Count == 0)
+				{
+					engine.ExitFail($"No elements of type {ProtocolName} correctly initialized");
+				}
+
+				// Loop through all CoinMarketCapElements and make csv file
+				MakeCsvFiles();
+			}
+			catch (Exception e)
+			{
+				engine.ExitFail($"ERROR: {e}");
+			}
+		}
+
+		public List<TableRow> FillRecords(IDictionary<string, object[]> tabledata)
+		{
+			List<TableRow> records = new List<TableRow>();
+			if (tabledata != null)
+			{
+				foreach (KeyValuePair<string, object[]> data in tabledata)
+				{
+					object[] row = data.Value;
+					if (row.Length >= typeof(TableRow).GetProperties().Length)
+					{
+						records.Add(new TableRow
+						{
+							Id = Convert.ToString(row[0]),
+							Name = Convert.ToString(row[1]),
+							Symbol = Convert.ToString(row[2]),
+							NumMarketPairs = Convert.ToInt32(row[3]),
+							CmcRank = Convert.ToInt32(row[4]),
+							CirculatingSupply = Convert.ToDouble(row[5]),
+							TotalSupply = Convert.ToDouble(row[6]),
+							MaxSupply = Convert.ToDouble(row[7]),
+							LastUpdated = Convert.ToDouble(row[8]),
+							DateAdded = Convert.ToDouble(row[9]),
+							TvlRatio = Convert.ToDouble(row[10]),
+							PlatformName = Convert.ToString(row[11]),
+							Quote = Convert.ToString(row[12]),
+							Price = Convert.ToDouble(row[13]),
+							Volume24h = Convert.ToDouble(row[14]),
+							VolumeChange24h = Convert.ToDouble(row[15]),
+							MarketCap = Convert.ToDouble(row[16]),
+							MarketCapDominance = Convert.ToDouble(row[17]),
+							PercentChange1h = Convert.ToDouble(row[18]),
+							PercentChange24h = Convert.ToDouble(row[19]),
+							PercentChange7d = Convert.ToDouble(row[20]),
+							DisplayKey = Convert.ToString(row[21]),
+						});
+					}
 				}
 			}
 
-			// Check if there are elements with the CoinMarketCap protocol
-			if (coinMarketCapElements.Count == 0)
-			{
-				engine.ExitFail($"No elements of type {ProtocolName} correctly initialized");
-			}
-
-			// Loop through all CoinMarketCapElements and make csv file
-			foreach (CoinMarketCapElement element in coinMarketCapElements)
-			{
-				// Make csv file
-				CsvWriter csv = element.MakeCsvWriter();
-
-				// Get cryptocurrencies table of the CoinMarketCap element
-				IDictionary<string, object[]> tabledata = element.GetCryptocurrenciesTable();
-
-				// Fill records list with rows from the table
-				records = FillRecords(tabledata);
-
-				// Write records to file
-				csv.WriteRecords(records);
-				csv.Flush();
-			}
+			return records;
 		}
 
 		private bool InitializeDMS(IEngine engine)
@@ -133,6 +162,18 @@ namespace CoinMarketCap_1
 			return true;
 		}
 
+		private void GetCoinMarketCapElements(IEngine engine)
+		{
+			List<IDmsElement> elements = (List<IDmsElement>)dms.GetElements();
+			foreach (IDmsElement element in elements)
+			{
+				if (element.Protocol.Name == ProtocolName && element.Protocol.Version == ProtocolVersion)
+				{
+					InitializeElement(engine, element);
+				}
+			}
+		}
+
 		private void InitializeElement(IEngine engine, IDmsElement coinMarketCapElement)
 		{
 			try
@@ -145,44 +186,27 @@ namespace CoinMarketCap_1
 			}
 		}
 
-		private List<TableRow> FillRecords(IDictionary<string, object[]> tabledata)
+		private void MakeCsvFiles()
 		{
-			List<TableRow> records = new List<TableRow>();
-
-			foreach (KeyValuePair<string, object[]> data in tabledata)
+			foreach (CoinMarketCapElement element in coinMarketCapElements)
 			{
-				object[] row = data.Value;
-				if (row.Length >= typeof(TableRow).GetProperties().Length)
-				{
-					records.Add(new TableRow
-					{
-						Id = Convert.ToString(row[0]),
-						Name = Convert.ToString(row[1]),
-						Symbol = Convert.ToString(row[2]),
-						NumMarketPairs = Convert.ToInt32(row[3]),
-						CmcRank = Convert.ToInt32(row[4]),
-						CirculatingSupply = Convert.ToDouble(row[5]),
-						TotalSupply = Convert.ToDouble(row[6]),
-						MaxSupply = Convert.ToDouble(row[7]),
-						LastUpdated = Convert.ToDouble(row[8]),
-						DateAdded = Convert.ToDouble(row[9]),
-						TvlRatio = Convert.ToDouble(row[10]),
-						PlatformName = Convert.ToString(row[11]),
-						Quote = Convert.ToString(row[12]),
-						Price = Convert.ToDouble(row[13]),
-						Volume24h = Convert.ToDouble(row[14]),
-						VolumeChange24h = Convert.ToDouble(row[15]),
-						MarketCap = Convert.ToDouble(row[16]),
-						MarketCapDominance = Convert.ToDouble(row[17]),
-						PercentChange1h = Convert.ToDouble(row[18]),
-						PercentChange24h = Convert.ToDouble(row[19]),
-						PercentChange7d = Convert.ToDouble(row[20]),
-						DisplayKey = Convert.ToString(row[21]),
-					});
-				}
-			}
+				// Make csv file
+				CsvWriter csv = element.MakeCsvWriter();
 
-			return records;
+				// Get cryptocurrencies table of the CoinMarketCap element
+				IDictionary<string, object[]> tabledata = element.GetCryptocurrenciesTable();
+
+				// Fill records list with rows from the table
+				records = FillRecords(tabledata);
+
+				// Write records to file
+				if (records != null)
+				{
+					csv.WriteRecords(records);
+				}
+
+				csv.Flush();
+			}
 		}
 	}
 }

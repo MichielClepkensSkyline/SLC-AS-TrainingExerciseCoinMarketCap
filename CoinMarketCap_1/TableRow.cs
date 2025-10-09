@@ -1,6 +1,6 @@
 ﻿namespace CoinMarketCap_1
 {
-	internal class TableRow
+	public class TableRow
 	{
 		public string Id { get; set; }
 
