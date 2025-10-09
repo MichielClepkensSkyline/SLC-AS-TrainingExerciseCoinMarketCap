@@ -206,7 +206,6 @@
 		[TestMethod]
 		public void GetActiveElementsForSpecificProtocolTest_NoElementsForProtocol_ReturnsEmptyList()
 		{
-			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
 			string otherProtocol = "Starlink";
 			Script script = new Script();
 			Mock<IDms> dms = new Mock<IDms>();
