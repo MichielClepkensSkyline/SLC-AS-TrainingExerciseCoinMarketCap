@@ -1,5 +1,8 @@
 ﻿namespace CoinMarketCap_1.Tests
 {
+	using Moq;
+	using Skyline.DataMiner.Automation;
+
 	/// <summary>
 	/// Unit Test Class.
 	/// </summary>
@@ -15,9 +18,10 @@
 			// Arrange
 			Dictionary<string, object[]>? tabledata = null;
 			Script script = new Script();
+			Mock<IEngine> engine = new Mock<IEngine>();
 
 			// Act
-			List<TableRow> result = script.FillRecords(tabledata);
+			List<TableRow> result = script.FillRecords(tabledata, engine.Object);
 
 			// Assert
 			Assert.IsTrue(result.Count == 0);

@@ -92,7 +92,7 @@ namespace CoinMarketCap_1
 				}
 
 				// Loop through all CoinMarketCapElements and make csv file
-				MakeCsvFiles();
+				MakeCsvFiles(engine);
 			}
 			catch (Exception e)
 			{
@@ -100,7 +100,7 @@ namespace CoinMarketCap_1
 			}
 		}
 
-		public List<TableRow> FillRecords(IDictionary<string, object[]> tabledata)
+		public List<TableRow> FillRecords(IDictionary<string, object[]> tabledata, IEngine engine)
 		{
 			List<TableRow> records = new List<TableRow>();
 			if (tabledata != null)
@@ -135,6 +135,10 @@ namespace CoinMarketCap_1
 							PercentChange7d = Convert.ToDouble(row[20]),
 							DisplayKey = Convert.ToString(row[21]),
 						});
+					}
+					else
+					{
+						engine.Log($"Row does not contain enough fields to fill in csv row ({row})", LogType.Debug, 4);
 					}
 				}
 			}
@@ -186,7 +190,7 @@ namespace CoinMarketCap_1
 			}
 		}
 
-		private void MakeCsvFiles()
+		private void MakeCsvFiles(IEngine engine)
 		{
 			foreach (CoinMarketCapElement element in coinMarketCapElements)
 			{
@@ -197,7 +201,7 @@ namespace CoinMarketCap_1
 				IDictionary<string, object[]> tabledata = element.GetCryptocurrenciesTable();
 
 				// Fill records list with rows from the table
-				records = FillRecords(tabledata);
+				records = FillRecords(tabledata, engine);
 
 				// Write records to file
 				if (records != null)
