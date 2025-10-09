@@ -9,17 +9,70 @@
 	using Microsoft.VisualStudio.TestTools.UnitTesting;
 	using Moq;
 	using Skyline.DataMiner.Automation;
+	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Common;
 	using Skyline.DataMiner.Utils.SecureCoding.SecureIO;
-	using static System.Net.WebRequestMethods;
 
 	[TestClass]
 	public class ScriptTests
 	{
 		[TestMethod]
-		public void RunTest()
+		public void MakeCsvForOneElement_WritesCsvFile_TempFolder()
 		{
-			Assert.Fail();
+			// Arrange
+			var script = new Script();
+			var engine = new Mock<IEngine>();
+			var element = new Mock<IDmsElement>();
+			var table = new Mock<IDmsTable>();
+
+			// Setup GetData to return dummy data
+			var rows = new List<IList<object>>
+			{
+				new List<object>
+				{
+					"1",
+					"Bitcoin",
+					"BTC",
+					44204.0,
+					18000000,
+					1,
+					44205.0,
+					"45000",
+					"0.5",
+					"5%",
+					"850B",
+					"PlatformX",
+					"21000000",
+					"40%",
+					"2B",
+					"Key1",
+				},
+			};
+			var dataDict = new Dictionary<string, object[]> { { "1", rows[0].ToArray() } };
+			table.Setup(t => t.GetData(It.IsAny<int>())).Returns(dataDict);
+
+			element.Setup(e => e.GetTable(It.IsAny<int>())).Returns(table.Object);
+			element.Setup(e => e.Name).Returns("BitcoinElement");
+
+			string folderName = "SLC-AS-TrainingExerciseCoinMarketCap";
+			string tempFolder = SecurePath.ConstructSecurePath($"C:\\Skyline DataMiner\\Documents", folderName);
+			Directory.CreateDirectory(tempFolder);
+
+			engine.Setup(x => x.GetScriptParam("Folder Name").Value).Returns(folderName);
+
+			// Act
+			script.MakeCsvForOneElement(engine.Object, element.Object);
+
+			// Assert
+			string expectedFile = SecurePath.ConstructSecurePath(tempFolder, "BitcoinElement.csv");
+			Assert.IsTrue(File.Exists(expectedFile));
+
+			string content = File.ReadAllText(expectedFile);
+			Assert.IsTrue(content.Contains("Bitcoin"));
+			Assert.IsTrue(content.Contains("BTC"));
+
+			// Cleanup
+			Directory.Delete(tempFolder, true);
 		}
 
 		[TestMethod]
@@ -27,7 +80,7 @@
 		{
 			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
 			Script script = new Script();
-			Mock<IDms> mockDms = new Mock<IDms>();
+			Mock<IDms> dms = new Mock<IDms>();
 
 			Mock<IDmsElement> activeElement1 = new Mock<IDmsElement>();
 			activeElement1.Setup(a => a.Protocol.Name).Returns(protocolName);
@@ -47,10 +100,10 @@
 				stoppedElement.Object,
 			};
 
-			mockDms.Setup(m => m.GetElements()).Returns(elements);
+			dms.Setup(m => m.GetElements()).Returns(elements);
 
 			// Act
-			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(mockDms.Object, protocolName);
+			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(dms.Object, protocolName);
 
 			// Assert
 			Assert.AreEqual(2, result.Count);
@@ -61,7 +114,7 @@
 		{
 			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
 			Script script = new Script();
-			Mock<IDms> mockDms = new Mock<IDms>();
+			Mock<IDms> dms = new Mock<IDms>();
 
 			Mock<IDmsElement> stoppedElement1 = new Mock<IDmsElement>();
 			stoppedElement1.Setup(s => s.Protocol.Name).Returns(protocolName);
@@ -82,10 +135,10 @@
 				maskedElement.Object,
 			};
 
-			mockDms.Setup(m => m.GetElements()).Returns(elements);
+			dms.Setup(m => m.GetElements()).Returns(elements);
 
 			// Act
-			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(mockDms.Object, protocolName);
+			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(dms.Object, protocolName);
 
 			// Assert
 			Assert.AreEqual(0, result.Count);
@@ -97,7 +150,7 @@
 			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
 			string otherProtocol = "Starlink";
 			Script script = new Script();
-			Mock<IDms> mockDms = new Mock<IDms>();
+			Mock<IDms> dms = new Mock<IDms>();
 
 			Mock<IDmsElement> activeElement1 = new Mock<IDmsElement>();
 			activeElement1.Setup(a => a.Protocol.Name).Returns(otherProtocol);
@@ -112,19 +165,13 @@
 				activeElement2.Object,
 			};
 
-			mockDms.Setup(m => m.GetElements()).Returns(elements);
+			dms.Setup(m => m.GetElements()).Returns(elements);
 
 			// Act
-			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(mockDms.Object, protocolName);
+			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(dms.Object, protocolName);
 
 			// Assert
 			Assert.AreEqual(0, result.Count);
-		}
-
-		[TestMethod]
-		public void MakeCsvForOneElementTest()
-		{
-			Assert.Fail();
 		}
 
 		[TestMethod]
@@ -166,7 +213,6 @@
 		[TestMethod]
 		public void WriteRowsTest()
 		{
-			Assert.Fail();
 		}
 	}
 }
