@@ -69,9 +69,11 @@ namespace CoinMarketCap_1
 	/// </summary>
 	public class Script
 	{
+		private const string ProtocolName = "Exercise HTTP CoinMarketCap Sofian";
 		private static IDms dms;
 		private List<CoinMarketCapElement> coinMarketCapElements = new List<CoinMarketCapElement>();
 		private List<TableRow> records;
+
 		/// <summary>
 		/// The script entry point.
 		/// </summary>
@@ -80,17 +82,26 @@ namespace CoinMarketCap_1
 		{
 			if (!InitializeDMS(engine))
 			{
-				engine.ExitFail("Initialization failed");
+				engine.ExitFail("Initialization engine failed");
 			}
 
 			// Get all elements with the CoinMarketCap protocol
 			List<IDmsElement> elements = (List<IDmsElement>)dms.GetElements();
 			foreach (IDmsElement element in elements)
 			{
-				if (element.Protocol.Name == "Exercise HTTP CoinMarketCap Sofian")
+				if (element.Protocol.Name == ProtocolName)
 				{
-					InitializeElement(engine, element);
+					if (!InitializeElement(engine, element))
+					{
+						engine.ExitFail($"Initialization element ({element.Name}) failed");
+					}
 				}
+			}
+
+			// Check if there are elements with the CoinMarketCap protocol
+			if (elements.Count == 0)
+			{
+				engine.ExitFail($"No elements of type {ProtocolName}");
 			}
 
 			// Loop through all CoinMarketCapElements and make csv file
@@ -148,31 +159,34 @@ namespace CoinMarketCap_1
 			foreach (KeyValuePair<string, object[]> data in tabledata)
 			{
 				object[] row = data.Value;
-				records.Add(new TableRow
+				if (row.Length >= typeof(TableRow).GetProperties().Length)
 				{
-					Id = Convert.ToString(row[0]),
-					Name = Convert.ToString(row[1]),
-					Symbol = Convert.ToString(row[2]),
-					NumMarketPairs = Convert.ToInt32(row[3]),
-					CmcRank = Convert.ToInt32(row[4]),
-					CirculatingSupply = Convert.ToDouble(row[5]),
-					TotalSupply = Convert.ToDouble(row[6]),
-					MaxSupply = Convert.ToDouble(row[7]),
-					LastUpdated = Convert.ToDouble(row[8]),
-					DateAdded = Convert.ToDouble(row[9]),
-					TvlRatio = Convert.ToDouble(row[10]),
-					PlatformName = Convert.ToString(row[11]),
-					Quote = Convert.ToString(row[12]),
-					Price = Convert.ToDouble(row[13]),
-					Volume24h = Convert.ToDouble(row[14]),
-					VolumeChange24h = Convert.ToDouble(row[15]),
-					MarketCap = Convert.ToDouble(row[16]),
-					MarketCapDominance = Convert.ToDouble(row[17]),
-					PercentChange1h = Convert.ToDouble(row[18]),
-					PercentChange24h = Convert.ToDouble(row[19]),
-					PercentChange7d = Convert.ToDouble(row[20]),
-					DisplayKey = Convert.ToString(row[21]),
-				});
+					records.Add(new TableRow
+					{
+						Id = Convert.ToString(row[0]),
+						Name = Convert.ToString(row[1]),
+						Symbol = Convert.ToString(row[2]),
+						NumMarketPairs = Convert.ToInt32(row[3]),
+						CmcRank = Convert.ToInt32(row[4]),
+						CirculatingSupply = Convert.ToDouble(row[5]),
+						TotalSupply = Convert.ToDouble(row[6]),
+						MaxSupply = Convert.ToDouble(row[7]),
+						LastUpdated = Convert.ToDouble(row[8]),
+						DateAdded = Convert.ToDouble(row[9]),
+						TvlRatio = Convert.ToDouble(row[10]),
+						PlatformName = Convert.ToString(row[11]),
+						Quote = Convert.ToString(row[12]),
+						Price = Convert.ToDouble(row[13]),
+						Volume24h = Convert.ToDouble(row[14]),
+						VolumeChange24h = Convert.ToDouble(row[15]),
+						MarketCap = Convert.ToDouble(row[16]),
+						MarketCapDominance = Convert.ToDouble(row[17]),
+						PercentChange1h = Convert.ToDouble(row[18]),
+						PercentChange24h = Convert.ToDouble(row[19]),
+						PercentChange7d = Convert.ToDouble(row[20]),
+						DisplayKey = Convert.ToString(row[21]),
+					});
+				}
 			}
 
 			return records;
