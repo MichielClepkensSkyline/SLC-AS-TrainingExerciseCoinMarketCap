@@ -25,7 +25,6 @@
 			var element = new Mock<IDmsElement>();
 			var table = new Mock<IDmsTable>();
 
-			// Setup GetData to return dummy data
 			var rows = new List<IList<object>>
 			{
 				new List<object>
@@ -73,6 +72,54 @@
 
 			// Cleanup
 			Directory.Delete(tempFolder, true);
+		}
+
+		[TestMethod]
+		public void MakeCsvForOneElement_EmptyData_LogsInfo()
+		{
+			// Arrange
+			var script = new Script();
+			var engine = new Mock<IEngine>();
+			var element = new Mock<IDmsElement>();
+			var table = new Mock<IDmsTable>();
+
+			var data = new Dictionary<string, object[]>();
+			table.Setup(t => t.GetData(It.IsAny<int>())).Returns(data);
+			element.Setup(e => e.GetTable(It.IsAny<int>())).Returns(table.Object);
+			element.Setup(e => e.Name).Returns("EmptyElement");
+
+			string folderName = "SLC-AS-TrainingExerciseCoinMarketCap";
+			engine.Setup(x => x.GetScriptParam("Folder Name").Value).Returns(folderName);
+
+			// Act
+			script.MakeCsvForOneElement(engine.Object, element.Object);
+
+			// Assert
+			engine.Verify(e => e.GenerateInformation(It.Is<string>(msg => msg.Contains("EmptyElement"))), Times.Once);
+		}
+
+		[TestMethod]
+		public void MakeCsvForOneElement_NullData_LogsInfo()
+		{
+			// Arrange
+			var script = new Script();
+			var engine = new Mock<IEngine>();
+			var element = new Mock<IDmsElement>();
+			var table = new Mock<IDmsTable>();
+
+			// Null data
+			table.Setup(t => t.GetData(It.IsAny<int>())).Returns((Dictionary<string, object[]>)null);
+			element.Setup(e => e.GetTable(It.IsAny<int>())).Returns(table.Object);
+			element.Setup(e => e.Name).Returns("NullDataElement");
+
+			string folderName = "SLC-AS-TrainingExerciseCoinMarketCap";
+			engine.Setup(x => x.GetScriptParam("Folder Name").Value).Returns(folderName);
+
+			// Act
+			script.MakeCsvForOneElement(engine.Object, element.Object);
+
+			// Assert
+			engine.Verify(e => e.GenerateInformation(It.Is<string>(msg => msg.Contains("NullDataElement"))), Times.Once);
 		}
 
 		[TestMethod]
@@ -208,11 +255,6 @@
 			{
 				script.FormPath(engine.Object, "HTTP CoinMarketCap Tajana");
 			});
-		}
-
-		[TestMethod]
-		public void WriteRowsTest()
-		{
 		}
 	}
 }
