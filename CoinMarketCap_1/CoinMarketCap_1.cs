@@ -85,17 +85,14 @@ namespace CoinMarketCap_1
 			{
 				if (element.Protocol.Name == ProtocolName)
 				{
-					if (!InitializeElement(engine, element))
-					{
-						engine.ExitFail($"Initialization element ({element.Name}) failed");
-					}
+					InitializeElement(engine, element);
 				}
 			}
 
 			// Check if there are elements with the CoinMarketCap protocol
-			if (elements.Count == 0)
+			if (coinMarketCapElements.Count == 0)
 			{
-				engine.ExitFail($"No elements of type {ProtocolName}");
+				engine.ExitFail($"No elements of type {ProtocolName} correctly initialized");
 			}
 
 			// Loop through all CoinMarketCapElements and make csv file
@@ -121,17 +118,22 @@ namespace CoinMarketCap_1
 			try
 			{
 				dms = engine.GetDms();
+				if (dms == null)
+				{
+					engine.Log("Initializing DMS failed: dms is null", LogType.Error, 0);
+					return false;
+				}
 			}
 			catch (Exception e)
 			{
-				engine.Log("Initializing DMS failed: " + e);
+				engine.Log("Initializing DMS failed: " + e, LogType.Error, 0);
 				return false;
 			}
 
 			return true;
 		}
 
-		private bool InitializeElement(IEngine engine, IDmsElement coinMarketCapElement)
+		private void InitializeElement(IEngine engine, IDmsElement coinMarketCapElement)
 		{
 			try
 			{
@@ -139,11 +141,8 @@ namespace CoinMarketCap_1
 			}
 			catch (Exception e)
 			{
-				engine.Log("Initializing CoinMarketCap element failed: " + e);
-				return false;
+				engine.Log("Initializing CoinMarketCap element failed: " + e, LogType.Error, 0);
 			}
-
-			return true;
 		}
 
 		private List<TableRow> FillRecords(IDictionary<string, object[]> tabledata)

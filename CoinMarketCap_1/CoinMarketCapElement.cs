@@ -23,7 +23,7 @@
 			this.engine = engine;
 			element = coinMarketCapElement;
 
-			if (!element.IsStartupComplete())
+			if (element.State != ElementState.Active)
 			{
 				throw new ArgumentException("CoinMarketCap element is not active");
 			}
