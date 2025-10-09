@@ -107,7 +107,7 @@ namespace CoinMarketCap_1
             engine.Log("EmirASCoinMarketCap|Start of the script");
             IDms dms = engine.GetDms();
             Data data = new Data();
-            data.GetData(dms,engine);
+            data.StoreData(dms,engine);
         }
     }
 }
