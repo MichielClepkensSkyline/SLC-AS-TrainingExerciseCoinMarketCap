@@ -66,6 +66,71 @@ namespace CoinMarketCap_1.Tests
 		}
 
 		[TestMethod]
+		public void GetActiveElementsForSpecificProtocolTest_NoActiveElements_ReturnsEmptyList()
+		{
+			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
+			Script script = new Script();
+			Mock<IDms> mockDms = new Mock<IDms>();
+
+			Mock<IDmsElement> stoppedElement1 = new Mock<IDmsElement>();
+			stoppedElement1.Setup(s => s.Protocol.Name).Returns(protocolName);
+			stoppedElement1.Setup(s => s.State).Returns(ElementState.Stopped);
+
+			Mock<IDmsElement> stoppedElement2 = new Mock<IDmsElement>();
+			stoppedElement2.Setup(s => s.Protocol.Name).Returns(protocolName);
+			stoppedElement2.Setup(s => s.State).Returns(ElementState.Stopped);
+
+			Mock<IDmsElement> maskedElement = new Mock<IDmsElement>();
+			maskedElement.Setup(s => s.Protocol.Name).Returns(protocolName);
+			maskedElement.Setup(s => s.State).Returns(ElementState.Masked);
+
+			List<IDmsElement> elements = new List<IDmsElement>()
+			{
+				stoppedElement1.Object,
+				stoppedElement2.Object,
+				maskedElement.Object,
+			};
+
+			mockDms.Setup(m => m.GetElements()).Returns(elements);
+
+			// Act
+			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(mockDms.Object, protocolName);
+
+			// Assert
+			Assert.AreEqual(0, result.Count);
+		}
+
+		[TestMethod]
+		public void GetActiveElementsForSpecificProtocolTest_NoElementsForProtocol_ReturnsEmptyList()
+		{
+			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
+			string otherProtocol = "Starlink";
+			Script script = new Script();
+			Mock<IDms> mockDms = new Mock<IDms>();
+
+			Mock<IDmsElement> activeElement1 = new Mock<IDmsElement>();
+			activeElement1.Setup(a => a.Protocol.Name).Returns(otherProtocol);
+			activeElement1.Setup(a => a.State).Returns(ElementState.Active);
+			Mock<IDmsElement> activeElement2 = new Mock<IDmsElement>();
+			activeElement2.Setup(a => a.Protocol.Name).Returns(otherProtocol);
+			activeElement2.Setup(a => a.State).Returns(ElementState.Active);
+
+			List<IDmsElement> elements = new List<IDmsElement>()
+			{
+				activeElement1.Object,
+				activeElement2.Object,
+			};
+
+			mockDms.Setup(m => m.GetElements()).Returns(elements);
+
+			// Act
+			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(mockDms.Object, protocolName);
+
+			// Assert
+			Assert.AreEqual(0, result.Count);
+		}
+
+		[TestMethod]
 		public void MakeCsvForOneElementTest()
 		{
 			Assert.Fail();
