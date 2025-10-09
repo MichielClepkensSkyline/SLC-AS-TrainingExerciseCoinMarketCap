@@ -32,9 +32,37 @@ namespace CoinMarketCap_1.Tests
 		}
 
 		[TestMethod]
-		public void GetActiveElementsForSpecificProtocolTest()
+		public void GetActiveElementsForSpecificProtocolTest_ValidInputs_ReturnsActiveElementsForProtocol()
 		{
+			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
+			Script script = new Script();
+			Mock<IDms> mockDms = new Mock<IDms>();
 
+			Mock<IDmsElement> activeElement1 = new Mock<IDmsElement>();
+			activeElement1.Setup(a => a.Protocol.Name).Returns(protocolName);
+			activeElement1.Setup(a => a.State).Returns(ElementState.Active);
+			Mock<IDmsElement> activeElement2 = new Mock<IDmsElement>();
+			activeElement2.Setup(a => a.Protocol.Name).Returns(protocolName);
+			activeElement2.Setup(a => a.State).Returns(ElementState.Active);
+
+			Mock<IDmsElement> stoppedElement = new Mock<IDmsElement>();
+			stoppedElement.Setup(s => s.Protocol.Name).Returns(protocolName);
+			stoppedElement.Setup(s => s.State).Returns(ElementState.Stopped);
+
+			List<IDmsElement> elements = new List<IDmsElement>()
+			{
+				activeElement1.Object,
+				activeElement2.Object,
+				stoppedElement.Object,
+			};
+
+			mockDms.Setup(m => m.GetElements()).Returns(elements);
+
+			// Act
+			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(mockDms.Object, protocolName);
+
+			// Assert
+			Assert.AreEqual(2, result.Count);
 		}
 
 		[TestMethod]
