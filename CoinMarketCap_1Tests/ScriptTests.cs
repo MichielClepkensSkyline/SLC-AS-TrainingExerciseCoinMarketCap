@@ -53,8 +53,8 @@
 			element.Setup(e => e.GetTable(It.IsAny<int>())).Returns(table.Object);
 			element.Setup(e => e.Name).Returns("BitcoinElement");
 
-			string folderName = "SLC-AS-TrainingExerciseCoinMarketCap";
-			string tempFolder = SecurePath.ConstructSecurePath($"C:\\Skyline DataMiner\\Documents", folderName);
+			string folderName = "Tajana";
+			string tempFolder = SecurePath.ConstructSecurePath($"C:\\Skyline DataMiner\\Documents\\SLC-AS-TrainingExerciseCoinMarketCap", folderName);
 			Directory.CreateDirectory(tempFolder);
 
 			engine.Setup(x => x.GetScriptParam("Folder Name").Value).Returns(folderName);
@@ -126,31 +126,43 @@
 		public void GetActiveElementsForSpecificProtocolTest_ValidInputs_ReturnsActiveElementsForProtocol()
 		{
 			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
+			string protocolVersion = "Production";
+			string otherProtocolVersion = "1.0.0.1";
 			Script script = new Script();
 			Mock<IDms> dms = new Mock<IDms>();
 
 			Mock<IDmsElement> activeElement1 = new Mock<IDmsElement>();
 			activeElement1.Setup(a => a.Protocol.Name).Returns(protocolName);
 			activeElement1.Setup(a => a.State).Returns(ElementState.Active);
+			activeElement1.Setup(a => a.Protocol.Version).Returns(protocolVersion);
+
 			Mock<IDmsElement> activeElement2 = new Mock<IDmsElement>();
 			activeElement2.Setup(a => a.Protocol.Name).Returns(protocolName);
 			activeElement2.Setup(a => a.State).Returns(ElementState.Active);
+			activeElement2.Setup(a => a.Protocol.Version).Returns(protocolVersion);
 
 			Mock<IDmsElement> stoppedElement = new Mock<IDmsElement>();
 			stoppedElement.Setup(s => s.Protocol.Name).Returns(protocolName);
 			stoppedElement.Setup(s => s.State).Returns(ElementState.Stopped);
+			stoppedElement.Setup(a => a.Protocol.Version).Returns(protocolVersion);
+
+			Mock<IDmsElement> activeElement3 = new Mock<IDmsElement>();
+			activeElement3.Setup(a => a.Protocol.Name).Returns(protocolName);
+			activeElement3.Setup(a => a.State).Returns(ElementState.Active);
+			activeElement3.Setup(a => a.Protocol.Version).Returns(otherProtocolVersion);
 
 			List<IDmsElement> elements = new List<IDmsElement>()
 			{
 				activeElement1.Object,
 				activeElement2.Object,
 				stoppedElement.Object,
+				activeElement3.Object,
 			};
 
 			dms.Setup(m => m.GetElements()).Returns(elements);
 
 			// Act
-			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(dms.Object, protocolName);
+			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(dms.Object);
 
 			// Assert
 			Assert.AreEqual(2, result.Count);
@@ -185,7 +197,7 @@
 			dms.Setup(m => m.GetElements()).Returns(elements);
 
 			// Act
-			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(dms.Object, protocolName);
+			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(dms.Object);
 
 			// Assert
 			Assert.AreEqual(0, result.Count);
@@ -215,7 +227,7 @@
 			dms.Setup(m => m.GetElements()).Returns(elements);
 
 			// Act
-			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(dms.Object, protocolName);
+			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(dms.Object);
 
 			// Assert
 			Assert.AreEqual(0, result.Count);
@@ -227,9 +239,9 @@
 			// Arrange
 			Script script = new Script();
 			Mock<IEngine> engine = new Mock<IEngine>();
-			string folderName = "SLC-AS-TrainingExerciseCoinMarketCap";
+			string folderName = "Tajana";
 			string elementName = "HTTP CoinMarketCap Tajana";
-			string expected = SecurePath.ConstructSecurePath("C:\\Skyline DataMiner\\Documents", folderName, $"{elementName}.csv");
+			string expected = SecurePath.ConstructSecurePath("C:\\Skyline DataMiner\\Documents\\SLC-AS-TrainingExerciseCoinMarketCap", folderName, $"{elementName}.csv");
 
 			engine.Setup(x => x.GetScriptParam("Folder Name").Value).Returns(folderName);
 
@@ -239,7 +251,7 @@
 			// Assert
 			Assert.IsNotNull(securePath);
 			Assert.AreEqual(expected, securePath.ToString());
-			Assert.IsTrue(Directory.Exists(SecurePath.ConstructSecurePath("C:\\Skyline DataMiner\\Documents", folderName)));
+			Assert.IsTrue(Directory.Exists(SecurePath.ConstructSecurePath("C:\\Skyline DataMiner\\Documents\\SLC-AS-TrainingExerciseCoinMarketCap", folderName)));
 		}
 
 		[TestMethod]

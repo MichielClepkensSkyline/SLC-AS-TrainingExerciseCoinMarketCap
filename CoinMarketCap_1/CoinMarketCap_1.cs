@@ -83,6 +83,10 @@ namespace CoinMarketCap_1
 			"Market Cap Dominance", "Volume (24h)", "Display Key",
 		};
 
+		private readonly string protocolName = "Exercise HTTP CoinMarketCap Tajana";
+
+		private readonly string protocolVersion = "Production";
+
 		private int latestListingTableId = 100;
 
 		public void Run(IEngine engine)
@@ -115,10 +119,9 @@ namespace CoinMarketCap_1
 
 		private void RunSafe(IEngine engine)
 		{
-			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
 			var dms = EnsureDms(engine);
 
-			List<IDmsElement> elements = GetActiveElementsForSpecificProtocol(dms, protocolName);
+			List<IDmsElement> elements = GetActiveElementsForSpecificProtocol(dms);
 
 			if (elements == null || elements.Count == 0)
 			{
@@ -151,9 +154,9 @@ namespace CoinMarketCap_1
 			}
 		}
 
-		public List<IDmsElement> GetActiveElementsForSpecificProtocol(IDms dms, string protocolName)
+		public List<IDmsElement> GetActiveElementsForSpecificProtocol(IDms dms)
 		{
-			return dms.GetElements().Where(p => p.Protocol.Name == protocolName && p.State == ElementState.Active).ToList();
+			return dms.GetElements().Where(p => p.Protocol.Name == protocolName && p.State == ElementState.Active && p.Protocol.Version == protocolVersion).ToList();
 		}
 
 		public void MakeCsvForOneElement(IEngine engine, IDmsElement element)
@@ -194,7 +197,7 @@ namespace CoinMarketCap_1
 				engine.ExitFail("FormPath|Script parameter 'Folder Name' is null or whitespace.");
 			}
 
-			string folderPath = SecurePath.ConstructSecurePath("C:\\Skyline DataMiner\\Documents", folderName);
+			string folderPath = SecurePath.ConstructSecurePath("C:\\Skyline DataMiner\\Documents\\SLC-AS-TrainingExerciseCoinMarketCap", folderName);
 
 			if (!Directory.Exists(folderPath))
 			{
