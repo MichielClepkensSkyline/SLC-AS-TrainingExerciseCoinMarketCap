@@ -76,6 +76,15 @@ namespace CoinMarketCap_1
 		/// The script entry point.
 		/// </summary>
 		/// <param name="engine">Link with SLAutomation process.</param>
+		private readonly string[] columnNames = new[]
+		{
+			"ID", "Name", "Symbol", "Date Added", "Circulating supply", "Rank", "Last Updated", "Quote Price",
+			"1h Change", "Volume Change (24h)", "Market Cap", "Platform Name", "Maximum supply",
+			"Market Cap Dominance", "Volume (24h)", "Display Key",
+		};
+
+		private int latestListingTableId = 100;
+
 		public void Run(IEngine engine)
 		{
 			try
@@ -109,14 +118,17 @@ namespace CoinMarketCap_1
 			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
 			var dms = EnsureDms(engine);
 
-			string[] columnNames = new[] { "ID", "Name", "Symbol", "Date Added", "Circulating supply", "Rank", "Last Updated", "Quote Price", "1h Change", "Volume Change (24h)", "Market Cap", "Platform Name", "Maximum supply", "Market Cap Dominance", "Volume (24h)", "Display Key" };
-
 			List<IDmsElement> elements = GetActiveElementsForSpecificProtocol(dms, protocolName);
 
-			var latestListingTableId = 100;
+			if (elements == null || elements.Count == 0)
+			{
+				engine.GenerateInformation($"RunSafe|No active elements found for protocol '{protocolName}'.");
+				return;
+			}
+
 			foreach (var element in elements)
 			{
-				MakeCsvForOneElement(engine, element, latestListingTableId, columnNames);
+				MakeCsvForOneElement(engine, element);
 			}
 		}
 
@@ -144,11 +156,17 @@ namespace CoinMarketCap_1
 			return dms.GetElements().Where(p => p.Protocol.Name == protocolName && p.State == ElementState.Active).ToList();
 		}
 
-		public void MakeCsvForOneElement(IEngine engine, IDmsElement element, int latestListingTableId, string[] columnNames)
+		public void MakeCsvForOneElement(IEngine engine, IDmsElement element)
 		{
 			var csvBuilder = new StringBuilder();
 			IDmsTable lastListingTable = element.GetTable(latestListingTableId);
 			var data = lastListingTable.GetData();
+
+			if (data == null || data.Count == 0)
+			{
+				engine.GenerateInformation($"MakeCsvForOneElement|No data found for element '{element.Name}'.");
+				return;
+			}
 
 			SecurePath filePath = FormPath(engine, element.Name);
 
@@ -191,13 +209,18 @@ namespace CoinMarketCap_1
 		{
 			foreach (var row in data)
 			{
+				if (row == null || row.Count == 0)
+				{
+					continue;
+				}
+
 				int colIndex = 0;
 
 				foreach (var item in row)
 				{
-					if ((colIndex == 3 || colIndex == 6) && double.TryParse(item?.ToString(), out double oaDate))
+					if ((colIndex == 3 || colIndex == 6) && double.TryParse(item?.ToString(), out double rawDate))
 					{
-						DateTime dt = DateTime.FromOADate(oaDate);
+						DateTime dt = DateTime.FromOADate(rawDate);
 						csv.WriteField(dt.ToString("yyyy-MM-dd HH:mm:ss"));
 					}
 					else
