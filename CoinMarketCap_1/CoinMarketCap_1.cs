@@ -60,6 +60,7 @@ namespace CoinMarketCap_1
 	using System.Collections.Generic;
 	using System.Globalization;
 	using System.IO;
+	using System.Linq;
 
 	/// <summary>
 	/// Represents a DataMiner Automation script.
@@ -128,13 +129,10 @@ namespace CoinMarketCap_1
 
 		private void GetCoinMarketCapElements(IEngine engine)
 		{
-			List<IDmsElement> elements = (List<IDmsElement>)dms.GetElements();
+			List<IDmsElement> elements = (List<IDmsElement>)dms.GetElements().Where(element => element.Protocol.Name == ProtocolName && element.Protocol.Version == ProtocolVersion && );
 			foreach (IDmsElement element in elements)
 			{
-				if (element.Protocol.Name == ProtocolName && element.Protocol.Version == ProtocolVersion)
-				{
-					InitializeElement(engine, element);
-				}
+				InitializeElement(engine, element);
 			}
 		}
 
