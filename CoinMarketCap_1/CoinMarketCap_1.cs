@@ -51,11 +51,11 @@ DATE		VERSION		AUTHOR			COMMENTS
 
 namespace CoinMarketCap_1
 {
-	using System;
-	using System.Collections.Generic;
-	using System.Globalization;
-	using System.Text;
-	using Skyline.DataMiner.Automation;
+    using System;
+    using System.Collections.Generic;
+    using System.Globalization;
+    using System.Text;
+    using Skyline.DataMiner.Automation;
     using Skyline.DataMiner.Core.DataMinerSystem.Automation;
     using Skyline.DataMiner.Core.DataMinerSystem.Common;
 
@@ -63,13 +63,13 @@ namespace CoinMarketCap_1
     /// Represents a DataMiner Automation script.
     /// </summary>
     public class Script
-	{
-		/// <summary>
-		/// The script entry point.
-		/// </summary>
-		/// <param name="engine">Link with SLAutomation process.</param>
-		public void Run(IEngine engine)
-		{
+    {
+        /// <summary>
+        /// The script entry point.
+        /// </summary>
+        /// <param name="engine">Link with SLAutomation process.</param>
+        public void Run(IEngine engine)
+        {
             try
             {
                 RunSafe(engine);
@@ -101,17 +101,19 @@ namespace CoinMarketCap_1
             }
         }
 
-		private void RunSafe(IEngine engine)
+        private void RunSafe(IEngine engine)
         {
             // TODO: Define code here
             engine.Log("EmirASCoinMarketCap|Start of the script");
             IDms dms = engine.GetDms();
+
             if (dms == null)
             {
                 engine.ExitFail("No DMS found");
             }
+
             Data data = new Data();
-            data.StoreData(dms,engine);
+            data.StoreData(dms, engine);
         }
     }
 }

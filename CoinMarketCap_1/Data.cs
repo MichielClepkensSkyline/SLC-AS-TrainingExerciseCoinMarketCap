@@ -1,20 +1,20 @@
-﻿using CsvHelper;
-using Skyline.DataMiner.Automation;
-using Skyline.DataMiner.Core.DataMinerSystem.Common;
-using Skyline.DataMiner.Core.DataMinerSystem.Common.Selectors;
-using Skyline.DataMiner.Net.ReportsAndDashboards;
-using Skyline.DataMiner.Net.SLSearch.Misc;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CoinMarketCap_1
+﻿namespace CoinMarketCap_1
 {
-    public class Data
+	using System;
+	using System.Collections.Generic;
+	using System.Globalization;
+	using System.IO;
+	using System.Linq;
+	using System.Text;
+	using System.Threading.Tasks;
+	using CsvHelper;
+	using Skyline.DataMiner.Automation;
+	using Skyline.DataMiner.Core.DataMinerSystem.Common;
+	using Skyline.DataMiner.Core.DataMinerSystem.Common.Selectors;
+	using Skyline.DataMiner.Net.ReportsAndDashboards;
+	using Skyline.DataMiner.Net.SLSearch.Misc;
+
+	public class Data
     {
         public enum Tables
         {
