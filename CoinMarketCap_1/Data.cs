@@ -42,6 +42,10 @@ namespace CoinMarketCap_1
                     {
                         StoreDataInCSV(latestListingsData, engine,element.Name);
                     }
+                    else
+                    {
+                        engine.ExitFail("There was an issue with reading the data from the table");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -55,14 +59,14 @@ namespace CoinMarketCap_1
             IDmsTable table = element.GetTable(tableId);
             if (table == null)
             {
-                engine.Log("Table was not found");
+                engine.Log($"[ERROR] Table with the designated id was not found in {element.Name}");
                 return null;
             }
 
             IDictionary<string, object[]> tableData = table.GetData();
             if (tableData == null)
             {
-                engine.Log("No data was found");
+                engine.Log($"[ERROR] No data was found in the table with the deisgnated id in the {element.Name} element");
                 return null;
             }
 
@@ -86,8 +90,8 @@ namespace CoinMarketCap_1
                         listings.Add(new LatestListings
                         {
                             Id = row.Key,
-                            Symbol = cols[2]?.ToString(),
                             Name = cols[1]?.ToString(),
+                            Symbol = cols[2]?.ToString(),
                             CoinMarketCapRank = Convert.ToInt32(cols[3]),
                             CirculatingSupply = Convert.ToDouble(cols[4]),
                             PriceInUSD = Convert.ToDouble(cols[5]),
@@ -105,6 +109,7 @@ namespace CoinMarketCap_1
                 }
 
                 csv.WriteRecords(listings);
+                engine.Log($"File saved succesfully at {filePath}");
             }
         }
 
@@ -125,8 +130,6 @@ namespace CoinMarketCap_1
             }
 
             string filePath = $"{directoryPath}\\{elementName}.csv";
-
-            engine.Log($"File path: {filePath}");
 
             return filePath;
         }

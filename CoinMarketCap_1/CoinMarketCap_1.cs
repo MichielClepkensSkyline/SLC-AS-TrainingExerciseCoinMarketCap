@@ -106,6 +106,10 @@ namespace CoinMarketCap_1
             // TODO: Define code here
             engine.Log("EmirASCoinMarketCap|Start of the script");
             IDms dms = engine.GetDms();
+            if (dms == null)
+            {
+                engine.ExitFail("No DMS found");
+            }
             Data data = new Data();
             data.StoreData(dms,engine);
         }
