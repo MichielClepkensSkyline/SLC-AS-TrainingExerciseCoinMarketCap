@@ -129,10 +129,17 @@ namespace CoinMarketCap_1
 
 		private void GetCoinMarketCapElements(IEngine engine)
 		{
-			List<IDmsElement> elements = (List<IDmsElement>)dms.GetElements().Where(element => element.Protocol.Name == ProtocolName && element.Protocol.Version == ProtocolVersion && );
-			foreach (IDmsElement element in elements)
+			if (dms.ProtocolExists(ProtocolName, ProtocolVersion))
 			{
-				InitializeElement(engine, element);
+				List<IDmsElement> elements = (List<IDmsElement>)dms.GetElements().Where(element => element.Protocol.Name == ProtocolName && element.Protocol.Version == ProtocolVersion && );
+				foreach (IDmsElement element in elements)
+				{
+					InitializeElement(engine, element);
+				}
+			}
+			else
+			{
+				engine.ExitFail($"Protocol ({ProtocolName}) or version ({ProtocolVersion}) doesn't exist.");
 			}
 		}
 
