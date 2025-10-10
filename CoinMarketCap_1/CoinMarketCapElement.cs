@@ -2,14 +2,10 @@
 {
 	using System;
 	using System.Collections.Generic;
-	using System.Globalization;
-	using System.IO;
-	using CsvHelper;
 	using Skyline.DataMiner.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Common;
-	using Skyline.DataMiner.Utils.SecureCoding.SecureIO;
 
-	internal class CoinMarketCapElement
+	public class CoinMarketCapElement
 	{
 		private const int TablePID = 200;
 		private readonly IEngine engine;
@@ -26,19 +22,7 @@
 			}
 		}
 
-		public string GetName()
-		{
-			return element.Name;
-		}
-
-		public IDictionary<string, object[]> GetCryptocurrenciesTable()
-		{
-			IDmsTable table = element.GetTable(TablePID);
-			IDictionary<string, object[]> tabledata = table.GetData();
-			return tabledata;
-		}
-
-		public List<TableRow> FillRecords(IDictionary<string, object[]> tabledata, IEngine engine)
+		public static List<TableRow> FillRecords(IDictionary<string, object[]> tabledata, IEngine engine)
 		{
 			List<TableRow> records = new List<TableRow>();
 			if (tabledata != null)
@@ -46,7 +30,7 @@
 				foreach (KeyValuePair<string, object[]> data in tabledata)
 				{
 					object[] row = data.Value;
-					if (row.Length >= typeof(TableRow).GetProperties().Length)
+					try
 					{
 						records.Add(new TableRow
 						{
@@ -74,14 +58,26 @@
 							DisplayKey = Convert.ToString(row[21]),
 						});
 					}
-					else
+					catch (Exception ex)
 					{
-						engine.Log($"Row does not contain enough fields to fill in csv row ({row})", LogType.Debug, 4);
+						engine.Log($"[ERROR] Failed to fill in row (key: '{data.Key}': {ex.Message}", LogType.Error, 1);
 					}
 				}
 			}
 
 			return records;
+		}
+
+		public string GetName()
+		{
+			return element.Name;
+		}
+
+		public IDictionary<string, object[]> GetCryptocurrenciesTable()
+		{
+			IDmsTable table = element.GetTable(TablePID);
+			IDictionary<string, object[]> tabledata = table.GetData();
+			return tabledata;
 		}
 	}
 }

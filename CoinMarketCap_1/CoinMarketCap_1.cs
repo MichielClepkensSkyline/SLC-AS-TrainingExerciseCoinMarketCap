@@ -51,16 +51,16 @@ DATE		VERSION		AUTHOR			COMMENTS
 
 namespace CoinMarketCap_1
 {
-	using CsvHelper;
-	using Skyline.DataMiner.Automation;
-	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
-	using Skyline.DataMiner.Core.DataMinerSystem.Common;
-	using Skyline.DataMiner.Utils.SecureCoding.SecureIO;
 	using System;
 	using System.Collections.Generic;
 	using System.Globalization;
 	using System.IO;
 	using System.Linq;
+	using CsvHelper;
+	using Skyline.DataMiner.Automation;
+	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
+	using Skyline.DataMiner.Core.DataMinerSystem.Common;
+	using Skyline.DataMiner.Utils.SecureCoding.SecureIO;
 
 	/// <summary>
 	/// Represents a DataMiner Automation script.
@@ -131,7 +131,7 @@ namespace CoinMarketCap_1
 		{
 			if (dms.ProtocolExists(ProtocolName, ProtocolVersion))
 			{
-				List<IDmsElement> elements = (List<IDmsElement>)dms.GetElements().Where(element => element.Protocol.Name == ProtocolName && element.Protocol.Version == ProtocolVersion && );
+				List<IDmsElement> elements = (List<IDmsElement>)dms.GetElements().Where(element => element.Protocol.Name == ProtocolName && element.Protocol.Version == ProtocolVersion);
 				foreach (IDmsElement element in elements)
 				{
 					InitializeElement(engine, element);
@@ -166,7 +166,7 @@ namespace CoinMarketCap_1
 					IDictionary<string, object[]> tabledata = element.GetCryptocurrenciesTable();
 
 					// Fill records list with rows from the table
-					records = element.FillRecords(tabledata, engine);
+					records = CoinMarketCapElement.FillRecords(tabledata, engine);
 
 					// Write records to file
 					if (records != null)

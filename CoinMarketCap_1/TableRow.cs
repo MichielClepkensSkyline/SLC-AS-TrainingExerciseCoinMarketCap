@@ -1,5 +1,7 @@
 ﻿namespace CoinMarketCap_1
 {
+	using System;
+
 	public class TableRow
 	{
 		public string Id { get; set; }
