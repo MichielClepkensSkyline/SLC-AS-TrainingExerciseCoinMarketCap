@@ -68,7 +68,7 @@ namespace CoinMarketCap_1
 	{
 		private const string ProtocolName = "Exercise HTTP CoinMarketCap Sofian";
 		private const string ProtocolVersion = "Production";
-		private const string ScriptParamName = "folderName";
+		private const int ScriptParamId = 3;
 		private const string BasePath = "C:\\Skyline DataMiner\\Documents\\SLC-AS-TrainingExerciseCoinMarketCap";
 		private const string FileExtension = ".csv";
 		private static IDms dms;
@@ -175,7 +175,7 @@ namespace CoinMarketCap_1
 		private CsvWriter MakeCsvWriter(IEngine engine, CoinMarketCapElement element)
 		{
 			// Check folder
-			string folderPath = engine.GetScriptParam(ScriptParamName).Value;
+			string folderPath = engine.GetScriptParam(ScriptParamId).Value;
 			SecurePath secureFolderPath = SecurePath.ConstructSecurePath(BasePath, folderPath);
 			if (!Directory.Exists(secureFolderPath))
 			{
