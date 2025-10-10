@@ -51,12 +51,15 @@ DATE		VERSION		AUTHOR			COMMENTS
 
 namespace CoinMarketCap_1
 {
-	using System;
-	using System.Collections.Generic;
 	using CsvHelper;
 	using Skyline.DataMiner.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Common;
+	using Skyline.DataMiner.Utils.SecureCoding.SecureIO;
+	using System;
+	using System.Collections.Generic;
+	using System.Globalization;
+	using System.IO;
 
 	/// <summary>
 	/// Represents a DataMiner Automation script.
@@ -65,6 +68,9 @@ namespace CoinMarketCap_1
 	{
 		private const string ProtocolName = "Exercise HTTP CoinMarketCap Sofian";
 		private const string ProtocolVersion = "Production";
+		private const string ScriptParamName = "folderName";
+		private const string BasePath = "C:\\Skyline DataMiner\\Documents\\SLC-AS-TrainingExerciseCoinMarketCap";
+		private const string FileExtension = ".csv";
 		private static IDms dms;
 		private readonly List<CoinMarketCapElement> coinMarketCapElements = new List<CoinMarketCapElement>();
 		private List<TableRow> records;
@@ -98,52 +104,6 @@ namespace CoinMarketCap_1
 			{
 				engine.ExitFail($"ERROR: {e}");
 			}
-		}
-
-		public List<TableRow> FillRecords(IDictionary<string, object[]> tabledata, IEngine engine)
-		{
-			List<TableRow> records = new List<TableRow>();
-			if (tabledata != null)
-			{
-				foreach (KeyValuePair<string, object[]> data in tabledata)
-				{
-					object[] row = data.Value;
-					if (row.Length >= typeof(TableRow).GetProperties().Length)
-					{
-						records.Add(new TableRow
-						{
-							Id = Convert.ToString(row[0]),
-							Name = Convert.ToString(row[1]),
-							Symbol = Convert.ToString(row[2]),
-							NumMarketPairs = Convert.ToInt32(row[3]),
-							CmcRank = Convert.ToInt32(row[4]),
-							CirculatingSupply = Convert.ToDouble(row[5]),
-							TotalSupply = Convert.ToDouble(row[6]),
-							MaxSupply = Convert.ToDouble(row[7]),
-							LastUpdated = Convert.ToDouble(row[8]),
-							DateAdded = Convert.ToDouble(row[9]),
-							TvlRatio = Convert.ToDouble(row[10]),
-							PlatformName = Convert.ToString(row[11]),
-							Quote = Convert.ToString(row[12]),
-							Price = Convert.ToDouble(row[13]),
-							Volume24h = Convert.ToDouble(row[14]),
-							VolumeChange24h = Convert.ToDouble(row[15]),
-							MarketCap = Convert.ToDouble(row[16]),
-							MarketCapDominance = Convert.ToDouble(row[17]),
-							PercentChange1h = Convert.ToDouble(row[18]),
-							PercentChange24h = Convert.ToDouble(row[19]),
-							PercentChange7d = Convert.ToDouble(row[20]),
-							DisplayKey = Convert.ToString(row[21]),
-						});
-					}
-					else
-					{
-						engine.Log($"Row does not contain enough fields to fill in csv row ({row})", LogType.Debug, 4);
-					}
-				}
-			}
-
-			return records;
 		}
 
 		private bool InitializeDMS(IEngine engine)
@@ -195,22 +155,41 @@ namespace CoinMarketCap_1
 			foreach (CoinMarketCapElement element in coinMarketCapElements)
 			{
 				// Make csv file
-				CsvWriter csv = element.MakeCsvWriter();
-
-				// Get cryptocurrencies table of the CoinMarketCap element
-				IDictionary<string, object[]> tabledata = element.GetCryptocurrenciesTable();
-
-				// Fill records list with rows from the table
-				records = FillRecords(tabledata, engine);
-
-				// Write records to file
-				if (records != null)
+				using (CsvWriter csv = MakeCsvWriter(engine, element))
 				{
-					csv.WriteRecords(records);
-				}
+					// Get cryptocurrencies table of the CoinMarketCap element
+					IDictionary<string, object[]> tabledata = element.GetCryptocurrenciesTable();
 
-				csv.Flush();
+					// Fill records list with rows from the table
+					records = element.FillRecords(tabledata, engine);
+
+					// Write records to file
+					if (records != null)
+					{
+						csv.WriteRecords(records);
+					}
+				}
 			}
+		}
+
+		private CsvWriter MakeCsvWriter(IEngine engine, CoinMarketCapElement element)
+		{
+			// Check folder
+			string folderPath = engine.GetScriptParam(ScriptParamName).Value;
+			SecurePath secureFolderPath = SecurePath.ConstructSecurePath(BasePath, folderPath);
+			if (!Directory.Exists(secureFolderPath))
+			{
+				Directory.CreateDirectory(secureFolderPath);
+			}
+
+			// Make secure path
+			string filePath = element.GetName() + FileExtension;
+			SecurePath securePath = SecurePath.ConstructSecurePath(secureFolderPath, filePath);
+
+			// Make csv writer
+			StreamWriter writer = new StreamWriter(securePath);
+			CsvWriter csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
+			return csvWriter;
 		}
 	}
 }

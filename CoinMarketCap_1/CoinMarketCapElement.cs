@@ -12,9 +12,6 @@
 	internal class CoinMarketCapElement
 	{
 		private const int TablePID = 200;
-		private const string ScriptParamName = "folderName";
-		private const string BasePath = "C:\\Skyline DataMiner\\Documents\\SLC-AS-TrainingExerciseCoinMarketCap";
-		private const string FileExtension = ".csv";
 		private readonly IEngine engine;
 		private readonly IDmsElement element;
 
@@ -41,24 +38,50 @@
 			return tabledata;
 		}
 
-		public CsvWriter MakeCsvWriter()
+		public List<TableRow> FillRecords(IDictionary<string, object[]> tabledata, IEngine engine)
 		{
-			// Check folder
-			string folderPath = engine.GetScriptParam(ScriptParamName).Value;
-			SecurePath secureFolderPath = SecurePath.ConstructSecurePath(BasePath, folderPath);
-			if (!Directory.Exists(secureFolderPath))
+			List<TableRow> records = new List<TableRow>();
+			if (tabledata != null)
 			{
-				Directory.CreateDirectory(secureFolderPath);
+				foreach (KeyValuePair<string, object[]> data in tabledata)
+				{
+					object[] row = data.Value;
+					if (row.Length >= typeof(TableRow).GetProperties().Length)
+					{
+						records.Add(new TableRow
+						{
+							Id = Convert.ToString(row[0]),
+							Name = Convert.ToString(row[1]),
+							Symbol = Convert.ToString(row[2]),
+							NumMarketPairs = Convert.ToInt32(row[3]),
+							CmcRank = Convert.ToInt32(row[4]),
+							CirculatingSupply = Convert.ToDouble(row[5]),
+							TotalSupply = Convert.ToDouble(row[6]),
+							MaxSupply = Convert.ToDouble(row[7]),
+							LastUpdated = Convert.ToDouble(row[8]),
+							DateAdded = Convert.ToDouble(row[9]),
+							TvlRatio = Convert.ToDouble(row[10]),
+							PlatformName = Convert.ToString(row[11]),
+							Quote = Convert.ToString(row[12]),
+							Price = Convert.ToDouble(row[13]),
+							Volume24h = Convert.ToDouble(row[14]),
+							VolumeChange24h = Convert.ToDouble(row[15]),
+							MarketCap = Convert.ToDouble(row[16]),
+							MarketCapDominance = Convert.ToDouble(row[17]),
+							PercentChange1h = Convert.ToDouble(row[18]),
+							PercentChange24h = Convert.ToDouble(row[19]),
+							PercentChange7d = Convert.ToDouble(row[20]),
+							DisplayKey = Convert.ToString(row[21]),
+						});
+					}
+					else
+					{
+						engine.Log($"Row does not contain enough fields to fill in csv row ({row})", LogType.Debug, 4);
+					}
+				}
 			}
 
-			// Make secure path
-			string filePath = this.GetName() + FileExtension;
-			SecurePath securePath = SecurePath.ConstructSecurePath(secureFolderPath, filePath);
-
-			// Make csv writer
-			StreamWriter writer = new StreamWriter(securePath);
-			CsvWriter csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
-			return csvWriter;
+			return records;
 		}
 	}
 }
