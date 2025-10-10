@@ -18,9 +18,9 @@
 
 		public double MaxSupply { get; set; }
 
-		public double LastUpdated { get; set; }
+		public DateTime LastUpdated { get; set; }
 
-		public double DateAdded { get; set; }
+		public DateTime DateAdded { get; set; }
 
 		public double TvlRatio { get; set; }
 
