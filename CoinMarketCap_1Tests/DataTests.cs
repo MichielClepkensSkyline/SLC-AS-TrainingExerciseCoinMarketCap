@@ -91,7 +91,7 @@ namespace CoinMarketCap_1.Tests
 		{
 			// Arrange
 			var mockTable = new Mock<IDmsTable>();
-			mockTable.Setup(t => t.GetData(It.IsAny<int>())).Returns((IDictionary<string, object[]>)null);
+			mockTable.Setup(t => t.GetData(It.IsAny<int>())).Returns(value: null);
 
 			var mockElement = new Mock<IDmsElement>();
 			mockElement.Setup(e => e.Name).Returns("MockElement");
@@ -135,6 +135,51 @@ namespace CoinMarketCap_1.Tests
 			Assert.AreEqual(2, result.Count);
 			Assert.AreEqual("BTC", result["1"][0]);
 			mockEngine.Verify(e => e.Log(It.IsAny<string>()), Times.Never);
+		}
+
+		[TestMethod]
+		public void StoreDataInCSV_ValidData()
+		{
+			// Arrange
+			var data = new Data();
+
+			var testData = new Dictionary<string, object[]>
+			{
+				{
+					"1", new object[] {
+					null, "Bitcoin", "BTC", 1, 19000000.0, 50000.0, 950000000000.0, 1.5, 2.1, DateTime.Now.ToOADate(), "BTC_Display" }
+				},
+			};
+
+			this.mockEngine.Setup(e => e.GetScriptParam("FolderName").Value).Returns("TestFolder");
+			string elementName = "TestElement";
+
+			// Act
+			data.StoreDataInCSV(testData, this.mockEngine.Object, elementName);
+
+			// Assert
+			this.mockEngine.Verify(e => e.Log(It.Is<string>(msg => msg.Contains("File saved succesfully"))), Times.Once);
+		}
+
+		[TestMethod]
+		public void StoreDataInCSV_InvalidRow()
+		{
+			// Arrange
+			var data = new Data();
+
+			Dictionary<string, object[]> invaildData = new Dictionary<string, object[]>
+			{
+				{ "1", new object[] { null, "Invalid", "BTC", "NOT_A_NUMBER", 1, 2, 3, 4, 5, 6, 7 } },
+			};
+
+			this.mockEngine.Setup(e => e.GetScriptParam("FolderName").Value).Returns("Test");
+			string elementName = "Broken";
+
+			// Act
+			data.StoreDataInCSV(invaildData, this.mockEngine.Object, elementName);
+
+			// Assert
+			this.mockEngine.Verify(e => e.Log(It.Is<string>(s => s.Contains("[ERROR] Failed to map row"))), Times.Once);
 		}
 	}
 }
