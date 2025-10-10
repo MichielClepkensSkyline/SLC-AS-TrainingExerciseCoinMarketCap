@@ -131,7 +131,7 @@ namespace CoinMarketCap_1
 		{
 			if (dms.ProtocolExists(ProtocolName, ProtocolVersion))
 			{
-				List<IDmsElement> elements = (List<IDmsElement>)dms.GetElements().Where(element => element.Protocol.Name == ProtocolName && element.Protocol.Version == ProtocolVersion);
+				IEnumerable<IDmsElement> elements = dms.GetElements().Where(element => element.Protocol.Name == ProtocolName && element.Protocol.Version == ProtocolVersion);
 				foreach (IDmsElement element in elements)
 				{
 					InitializeElement(engine, element);
