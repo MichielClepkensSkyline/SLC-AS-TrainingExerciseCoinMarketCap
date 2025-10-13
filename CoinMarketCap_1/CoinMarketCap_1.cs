@@ -76,18 +76,7 @@ namespace CoinMarketCap_1
 		/// The script entry point.
 		/// </summary>
 		/// <param name="engine">Link with SLAutomation process.</param>
-		private readonly string[] columnNames = new[]
-		{
-			"ID", "Name", "Symbol", "Date Added", "Circulating supply", "Rank", "Last Updated", "Quote Price",
-			"1h Change", "Volume Change (24h)", "Market Cap", "Platform Name", "Maximum supply",
-			"Market Cap Dominance", "Volume (24h)", "Display Key",
-		};
-
-		private readonly string protocolName = "Exercise HTTP CoinMarketCap Tajana";
-
-		private readonly string protocolVersion = "Production";
-
-		private int latestListingTableId = 100;
+		
 
 		public void Run(IEngine engine)
 		{
@@ -120,18 +109,18 @@ namespace CoinMarketCap_1
 		private void RunSafe(IEngine engine)
 		{
 			var dms = EnsureDms(engine);
-
-			List<IDmsElement> elements = GetActiveElementsForSpecificProtocol(dms);
+			var data = new Data();
+			List<IDmsElement> elements = data.GetActiveElementsForSpecificProtocol(dms);
 
 			if (elements == null || elements.Count == 0)
 			{
-				engine.GenerateInformation($"RunSafe|No active elements found for protocol '{protocolName}'.");
+				engine.GenerateInformation($"RunSafe|No active elements found for protocol '{data.protocolName}'.");
 				return;
 			}
 
 			foreach (var element in elements)
 			{
-				MakeCsvForOneElement(engine, element);
+				data.MakeCsvForOneElement(engine, element);
 			}
 		}
 
@@ -151,90 +140,6 @@ namespace CoinMarketCap_1
 			{
 				engine.ExitFail("EnsureDms|Exception while getting DMS: " + ex.Message);
 				return null;
-			}
-		}
-
-		public List<IDmsElement> GetActiveElementsForSpecificProtocol(IDms dms)
-		{
-			return dms.GetElements().Where(p => p.Protocol.Name == protocolName && p.State == ElementState.Active && p.Protocol.Version == protocolVersion).ToList();
-		}
-
-		public void MakeCsvForOneElement(IEngine engine, IDmsElement element)
-		{
-			var csvBuilder = new StringBuilder();
-			IDmsTable lastListingTable = element.GetTable(latestListingTableId);
-			var data = lastListingTable.GetData();
-
-			if (data == null || data.Count == 0)
-			{
-				engine.GenerateInformation($"MakeCsvForOneElement|No data found for element '{element.Name}'.");
-				return;
-			}
-
-			SecurePath filePath = FormPath(engine, element.Name);
-
-			using (var writer = new StreamWriter(filePath, false, Encoding.UTF8))
-
-			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-			{
-				foreach (var colName in columnNames)
-				{
-					csv.WriteField(colName);
-				}
-
-				csv.NextRecord();
-
-				WriteRows(csv, data.Values);
-			}
-		}
-
-		public SecurePath FormPath(IEngine engine, string elementName)
-		{
-			string folderName = engine.GetScriptParam("Folder Name").Value;
-
-			if (String.IsNullOrWhiteSpace(folderName))
-			{
-				engine.ExitFail("FormPath|Script parameter 'Folder Name' is null or whitespace.");
-			}
-
-			string folderPath = SecurePath.ConstructSecurePath("C:\\Skyline DataMiner\\Documents\\SLC-AS-TrainingExerciseCoinMarketCap", folderName);
-
-			if (!Directory.Exists(folderPath))
-			{
-				Directory.CreateDirectory(folderPath);
-			}
-
-			SecurePath securePath = SecurePath.ConstructSecurePath(folderPath, $"{elementName}.csv");
-			return securePath;
-		}
-
-		public void WriteRows(CsvWriter csv, IEnumerable<IList<object>> data)
-		{
-			foreach (var row in data)
-			{
-				if (row == null || row.Count == 0)
-				{
-					continue;
-				}
-
-				int colIndex = 0;
-
-				foreach (var item in row)
-				{
-					if ((colIndex == 3 || colIndex == 6) && double.TryParse(item?.ToString(), out double rawDate))
-					{
-						DateTime dt = DateTime.FromOADate(rawDate);
-						csv.WriteField(dt.ToString("yyyy-MM-dd HH:mm:ss"));
-					}
-					else
-					{
-						csv.WriteField(item?.ToString());
-					}
-
-					colIndex++;
-				}
-
-				csv.NextRecord();
 			}
 		}
 	}
