@@ -9,7 +9,8 @@
 	{
 		public SecurePath FormPath(IEngine engine, string elementName)
 		{
-			string folderName = engine.GetScriptParam(2).Value;
+			int scriptParamId = 2;
+			string folderName = engine.GetScriptParam(scriptParamId).Value;
 
 			if (String.IsNullOrWhiteSpace(folderName))
 			{

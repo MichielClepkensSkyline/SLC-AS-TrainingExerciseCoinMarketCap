@@ -3,13 +3,10 @@
 	using System;
 	using System.Collections.Generic;
 	using System.Linq;
-	using System.Text;
-	using System.Threading.Tasks;
 	using CoinMarketCap_1;
 	using Microsoft.VisualStudio.TestTools.UnitTesting;
 	using Moq;
 	using Skyline.DataMiner.Automation;
-	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Common;
 	using Skyline.DataMiner.Utils.SecureCoding.SecureIO;
 
@@ -20,10 +17,11 @@
 		public void MakeCsvForOneElement_WritesCsvFile_TempFolder()
 		{
 			// Arrange
-			var script = new Script();
+			Data data = new Data(); 
 			var engine = new Mock<IEngine>();
 			var element = new Mock<IDmsElement>();
 			var table = new Mock<IDmsTable>();
+			int scriptParamId = 2;
 
 			var rows = new List<IList<object>>
 			{
@@ -57,10 +55,10 @@
 			string tempFolder = SecurePath.ConstructSecurePath($"C:\\Skyline DataMiner\\Documents\\SLC-AS-TrainingExerciseCoinMarketCap", folderName);
 			Directory.CreateDirectory(tempFolder);
 
-			engine.Setup(x => x.GetScriptParam("Folder Name").Value).Returns(folderName);
+			engine.Setup(x => x.GetScriptParam(scriptParamId).Value).Returns(folderName);
 
 			// Act
-			script.MakeCsvForOneElement(engine.Object, element.Object);
+			data.MakeCsvForOneElement(engine.Object, element.Object);
 
 			// Assert
 			string expectedFile = SecurePath.ConstructSecurePath(tempFolder, "BitcoinElement.csv");
@@ -78,21 +76,22 @@
 		public void MakeCsvForOneElement_EmptyData_LogsInfo()
 		{
 			// Arrange
-			var script = new Script();
+			Data dataClass = new Data();
 			var engine = new Mock<IEngine>();
 			var element = new Mock<IDmsElement>();
 			var table = new Mock<IDmsTable>();
+			int scriptParamId = 2;
 
 			var data = new Dictionary<string, object[]>();
 			table.Setup(t => t.GetData(It.IsAny<int>())).Returns(data);
 			element.Setup(e => e.GetTable(It.IsAny<int>())).Returns(table.Object);
 			element.Setup(e => e.Name).Returns("EmptyElement");
 
-			string folderName = "SLC-AS-TrainingExerciseCoinMarketCap";
-			engine.Setup(x => x.GetScriptParam("Folder Name").Value).Returns(folderName);
+			string folderName = "Tajana";
+			engine.Setup(x => x.GetScriptParam(scriptParamId).Value).Returns(folderName);
 
 			// Act
-			script.MakeCsvForOneElement(engine.Object, element.Object);
+			dataClass.MakeCsvForOneElement(engine.Object, element.Object);
 
 			// Assert
 			engine.Verify(e => e.GenerateInformation(It.Is<string>(msg => msg.Contains("EmptyElement"))), Times.Once);
@@ -102,21 +101,22 @@
 		public void MakeCsvForOneElement_NullData_LogsInfo()
 		{
 			// Arrange
-			var script = new Script();
+			Data data = new Data(); 
 			var engine = new Mock<IEngine>();
 			var element = new Mock<IDmsElement>();
 			var table = new Mock<IDmsTable>();
+			int scriptParamId = 2;
 
 			// Null data
 			table.Setup(t => t.GetData(It.IsAny<int>())).Returns((Dictionary<string, object[]>)null);
 			element.Setup(e => e.GetTable(It.IsAny<int>())).Returns(table.Object);
 			element.Setup(e => e.Name).Returns("NullDataElement");
 
-			string folderName = "SLC-AS-TrainingExerciseCoinMarketCap";
-			engine.Setup(x => x.GetScriptParam("Folder Name").Value).Returns(folderName);
+			string folderName = "Tajana";
+			engine.Setup(x => x.GetScriptParam(scriptParamId).Value).Returns(folderName);
 
 			// Act
-			script.MakeCsvForOneElement(engine.Object, element.Object);
+			data.MakeCsvForOneElement(engine.Object, element.Object);
 
 			// Assert
 			engine.Verify(e => e.GenerateInformation(It.Is<string>(msg => msg.Contains("NullDataElement"))), Times.Once);
@@ -128,7 +128,8 @@
 			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
 			string protocolVersion = "Production";
 			string otherProtocolVersion = "1.0.0.1";
-			Script script = new Script();
+			var engine = new Mock<IEngine>();
+			Data data = new Data();
 			Mock<IDms> dms = new Mock<IDms>();
 
 			Mock<IDmsElement> activeElement1 = new Mock<IDmsElement>();
@@ -162,7 +163,7 @@
 			dms.Setup(m => m.GetElements()).Returns(elements);
 
 			// Act
-			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(dms.Object);
+			List<IDmsElement> result = data.GetActiveElementsForSpecificProtocol(dms.Object, engine.Object);
 
 			// Assert
 			Assert.AreEqual(2, result.Count);
@@ -172,8 +173,9 @@
 		public void GetActiveElementsForSpecificProtocolTest_NoActiveElements_ReturnsEmptyList()
 		{
 			string protocolName = "Exercise HTTP CoinMarketCap Tajana";
-			Script script = new Script();
+			Data data = new Data();
 			Mock<IDms> dms = new Mock<IDms>();
+			var engine = new Mock<IEngine>();
 
 			Mock<IDmsElement> stoppedElement1 = new Mock<IDmsElement>();
 			stoppedElement1.Setup(s => s.Protocol.Name).Returns(protocolName);
@@ -197,7 +199,7 @@
 			dms.Setup(m => m.GetElements()).Returns(elements);
 
 			// Act
-			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(dms.Object);
+			List<IDmsElement> result = data.GetActiveElementsForSpecificProtocol(dms.Object, engine.Object);
 
 			// Assert
 			Assert.AreEqual(0, result.Count);
@@ -207,8 +209,9 @@
 		public void GetActiveElementsForSpecificProtocolTest_NoElementsForProtocol_ReturnsEmptyList()
 		{
 			string otherProtocol = "Starlink";
-			Script script = new Script();
+			Data data = new Data(); 
 			Mock<IDms> dms = new Mock<IDms>();
+			var engine = new Mock<IEngine>();
 
 			Mock<IDmsElement> activeElement1 = new Mock<IDmsElement>();
 			activeElement1.Setup(a => a.Protocol.Name).Returns(otherProtocol);
@@ -226,7 +229,7 @@
 			dms.Setup(m => m.GetElements()).Returns(elements);
 
 			// Act
-			List<IDmsElement> result = script.GetActiveElementsForSpecificProtocol(dms.Object);
+			List<IDmsElement> result = data.GetActiveElementsForSpecificProtocol(dms.Object, engine.Object);
 
 			// Assert
 			Assert.AreEqual(0, result.Count);
@@ -236,16 +239,16 @@
 		public void FormPathTest_ValidInput_ReturnsSecurePath()
 		{
 			// Arrange
-			Script script = new Script();
+			Path path = new Path();
 			Mock<IEngine> engine = new Mock<IEngine>();
 			string folderName = "Tajana";
 			string elementName = "HTTP CoinMarketCap Tajana";
 			string expected = SecurePath.ConstructSecurePath("C:\\Skyline DataMiner\\Documents\\SLC-AS-TrainingExerciseCoinMarketCap", folderName, $"{elementName}.csv");
-
-			engine.Setup(x => x.GetScriptParam("Folder Name").Value).Returns(folderName);
+			int scriptParamId = 2;
+			engine.Setup(x => x.GetScriptParam(scriptParamId).Value).Returns(folderName);
 
 			// Act
-			SecurePath securePath = script.FormPath(engine.Object, elementName);
+			SecurePath securePath = path.FormPath(engine.Object, elementName);
 
 			// Assert
 			Assert.IsNotNull(securePath);
@@ -257,14 +260,15 @@
 		public void FormPathTest_EmptyFolderName_ExitFail()
 		{
 			// Arrange
-			Script script = new Script();
+			Path path = new Path();
+			int scriptParamId = 2;
 			Mock<IEngine> engine = new Mock<IEngine>();
-			engine.Setup(x => x.GetScriptParam("Folder Name").Value).Returns(string.Empty);
+			engine.Setup(x => x.GetScriptParam(scriptParamId).Value).Returns(string.Empty);
 
 			// Assert
 			var ex = Assert.ThrowsException<ArgumentException>(() =>
 			{
-				script.FormPath(engine.Object, "HTTP CoinMarketCap Tajana");
+				path.FormPath(engine.Object, "HTTP CoinMarketCap Tajana");
 			});
 		}
 	}
