@@ -117,24 +117,22 @@ namespace CoinMarketCap_1.Tests
 			};
 
 			var mockTable = new Mock<IDmsTable>();
-			mockTable.Setup(t => t.GetData(It.IsAny<int>())).Returns((IDictionary<string, object[]>)null);
+			mockTable.Setup(t => t.GetData(It.IsAny<int>())).Returns(value: null);
 
 			var mockElement = new Mock<IDmsElement>();
 			mockElement.Setup(e => e.GetTable(It.IsAny<int>())).Returns(mockTable.Object);
 			mockElement.Setup(e => e.Name).Returns("MockElement");
 
-			var mockEngine = new Mock<IEngine>();
-
 			var data = new Data();
 
 			// Act
-			var result = data.ReadDataFormTable(100, mockElement.Object, mockEngine.Object);
+			var result = data.ReadDataFormTable(100, mockElement.Object, this.mockEngine.Object);
 
 			// Assert
 			Assert.IsNotNull(result);
 			Assert.AreEqual(2, result.Count);
 			Assert.AreEqual("BTC", result["1"][0]);
-			mockEngine.Verify(e => e.Log(It.IsAny<string>()), Times.Never);
+			this.mockEngine.Verify(e => e.Log(It.IsAny<string>()), Times.Never);
 		}
 
 		[TestMethod]
@@ -147,7 +145,7 @@ namespace CoinMarketCap_1.Tests
 			{
 				{
 					"1", new object[] {
-					null, "Bitcoin", "BTC", 1, 19000000.0, 50000.0, 950000000000.0, 1.5, 2.1, DateTime.Now.ToOADate(), "BTC_Display" }
+					"1", "Bitcoin", "BTC", 1, 19000000.0, 50000.0, 950000000000.0, 1.5, 2.1, DateTime.Now.ToOADate(), "BTC_Display" }
 				},
 			};
 
@@ -180,6 +178,79 @@ namespace CoinMarketCap_1.Tests
 
 			// Assert
 			this.mockEngine.Verify(e => e.Log(It.Is<string>(s => s.Contains("[ERROR] Failed to map row"))), Times.Once);
+		}
+
+		[TestMethod]
+		public void StoreData_ProtocolNotFound()
+		{
+			// Arrange
+			var mockDms = new Mock<IDms>();
+
+			mockDms.Setup(d => d.ProtocolExists(It.IsAny<string>(), It.IsAny<string>())).Returns(false);
+
+			var data = new Data();
+
+			// Act
+			data.StoreData(mockDms.Object,this.mockEngine.Object);
+
+			// Assert
+			this.mockEngine.Verify(e => e.Log("[ERROR] No protocol with this name and version was found"), Times.Once);
+		}
+
+		[TestMethod]
+		public void StoreData_NullTableData_EngineExitFailCalled()
+		{
+			string protocolName = "Exercise HTTP CoinMarketCap Emir";
+			string protocolVersion = "Production";
+			var mockDms = new Mock<IDms>();
+			var mockElement = new Mock<IDmsElement>();
+
+			mockElement.Setup(e => e.Name).Returns("Element1");
+			mockElement.Setup(e => e.Protocol.Name).Returns(protocolName);
+			mockElement.Setup(e => e.Protocol.Version).Returns(protocolVersion);
+
+			mockDms.Setup(d => d.ProtocolExists(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+			mockDms.Setup(d => d.GetElements()).Returns(new[] { mockElement.Object });
+
+			var data = new Mock<Data>();
+			data.CallBase = true;
+
+			data.Setup(s => s.ReadDataFormTable(It.IsAny<int>(), mockElement.Object, mockEngine.Object)).Returns((IDictionary<string, object[]>)null);
+
+			data.Object.StoreData(mockDms.Object, this.mockEngine.Object);
+
+			this.mockEngine.Verify(e => e.ExitFail("There was an issue with reading the data from the table"), Times.Once);
+		}
+
+		[TestMethod]
+		public void StoreData_ValidElementAndData()
+		{
+			string protocolName = "Exercise HTTP CoinMarketCap Emir";
+			string protocolVersion = "Production";
+			var mockDms = new Mock<IDms>();
+			var mockElement = new Mock<IDmsElement>();
+
+			mockElement.Setup(e => e.Name).Returns("Element1");
+			mockElement.Setup(e => e.Protocol.Name).Returns(protocolName);
+			mockElement.Setup(e => e.Protocol.Version).Returns(protocolVersion);
+
+			var fakeData = new Dictionary<string, object[]>
+			{
+				{ "1", new object[] { "1", "Bitcoin", "BTC", 1, 1000000.0, 50000.0, 900000000.0, 0.5, 0.8, DateTime.Now.ToOADate(), "BTC_Display" } },
+			};
+
+			mockDms.Setup(d => d.ProtocolExists(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+			mockDms.Setup(d => d.GetElements()).Returns(new[] { mockElement.Object });
+
+			Mock<Data> data = new Mock<Data>();
+			data.CallBase = true;
+
+			data.Setup(s => s.ReadDataFormTable(It.IsAny<int>(), mockElement.Object, this.mockEngine.Object)).Returns(fakeData);
+			data.Setup(s => s.StoreDataInCSV(fakeData, mockEngine.Object, "Element1"));
+
+			data.Object.StoreData(mockDms.Object, this.mockEngine.Object);
+
+			data.Verify(s => s.StoreDataInCSV(fakeData, this.mockEngine.Object, "Element1"), Times.Once);
 		}
 	}
 }
