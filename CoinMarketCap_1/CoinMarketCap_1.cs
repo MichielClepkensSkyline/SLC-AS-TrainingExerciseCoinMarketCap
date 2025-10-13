@@ -53,19 +53,9 @@ namespace CoinMarketCap_1
 {
 	using System;
 	using System.Collections.Generic;
-	using System.Globalization;
-	using System.IO;
-	using System.Linq;
-	using System.Text;
-	using CsvHelper;
 	using Skyline.DataMiner.Automation;
-	using Skyline.DataMiner.Automation.Logging;
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Common;
-	using Skyline.DataMiner.Core.DataMinerSystem.Common.Selectors;
-	using Skyline.DataMiner.Net.Helper;
-	using Skyline.DataMiner.Net.Messages.SLDataGateway;
-	using Skyline.DataMiner.Utils.SecureCoding.SecureIO;
 
 	/// <summary>
 	/// Represents a DataMiner Automation script.
@@ -76,8 +66,6 @@ namespace CoinMarketCap_1
 		/// The script entry point.
 		/// </summary>
 		/// <param name="engine">Link with SLAutomation process.</param>
-		
-
 		public void Run(IEngine engine)
 		{
 			try
@@ -110,13 +98,7 @@ namespace CoinMarketCap_1
 		{
 			var dms = EnsureDms(engine);
 			var data = new Data();
-			List<IDmsElement> elements = data.GetActiveElementsForSpecificProtocol(dms);
-
-			if (elements == null || elements.Count == 0)
-			{
-				engine.GenerateInformation($"RunSafe|No active elements found for protocol '{data.protocolName}'.");
-				return;
-			}
+			List<IDmsElement> elements = data.GetActiveElementsForSpecificProtocol(dms,engine);
 
 			foreach (var element in elements)
 			{

@@ -13,22 +13,29 @@
 
 	public class Data
 	{
-		public readonly string protocolName = "Exercise HTTP CoinMarketCap Tajana";
+		private const string ProtocolName = "Exercise HTTP CoinMarketCap Tajana";
 
-		private readonly string protocolVersion = "Production";
+		private const string ProtocolVersion = "Production";
 
-		private int latestListingTableId = 100;
+		private const int LatestListingTableId = 100;
 
-		public List<IDmsElement> GetActiveElementsForSpecificProtocol(IDms dms)
+		public List<IDmsElement> GetActiveElementsForSpecificProtocol(IDms dms, IEngine engine)
 		{
-			return dms.GetElements().Where(p => p.Protocol.Name == protocolName && p.State == ElementState.Active && p.Protocol.Version == protocolVersion).ToList();
+			List <IDmsElement> elements = dms.GetElements().Where(p => p.Protocol.Name == ProtocolName && p.State == ElementState.Active && p.Protocol.Version == ProtocolVersion).ToList();
+
+			if (elements == null || elements.Count == 0)
+			{
+				engine.GenerateInformation($"RunSafe|No active elements found for protocol '{ProtocolName}'.");
+			}
+
+			return elements;
 		}
 
 		public void MakeCsvForOneElement(IEngine engine, IDmsElement element)
 		{
-			IDmsTable lastListingTable = element.GetTable(latestListingTableId);
+			IDmsTable lastListingTable = element.GetTable(LatestListingTableId);
 
-			if (lastListingTable != null)
+			if (lastListingTable == null)
 			{
 				engine.GenerateInformation($"MakeCsvForOneElement|Table {lastListingTable.Element.Name}  is null.");
 				return;

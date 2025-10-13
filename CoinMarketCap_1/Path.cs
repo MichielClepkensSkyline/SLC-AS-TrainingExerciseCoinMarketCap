@@ -7,7 +7,6 @@
 
 	public class Path
 	{
-
 		public SecurePath FormPath(IEngine engine, string elementName)
 		{
 			string folderName = engine.GetScriptParam(2).Value;
