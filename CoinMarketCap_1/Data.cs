@@ -76,25 +76,60 @@ namespace CoinMarketCap_1
 					continue;
 				}
 
-				int colIndex = 0;
+				var listing = MapToLatestListing(row);
 
-				foreach (var item in row)
-				{
-					if ((colIndex == 3 || colIndex == 6) && double.TryParse(item?.ToString(), out double rawDate))
-					{
-						DateTime dt = DateTime.FromOADate(rawDate);
-						csv.WriteField(dt.ToString("yyyy-MM-dd HH:mm:ss"));
-					}
-					else
-					{
-						csv.WriteField(item?.ToString());
-					}
+				if (listing == null)
+					continue;
 
-					colIndex++;
-				}
+				csv.WriteField(listing.ID);
+				csv.WriteField(listing.Name);
+				csv.WriteField(listing.Symbol);
+				csv.WriteField(listing.DateAdded?.ToString("yyyy-MM-dd HH:mm:ss"));
+				csv.WriteField(listing.CirculatingSupply);
+				csv.WriteField(listing.Rank);
+				csv.WriteField(listing.LastUpdated?.ToString("yyyy-MM-dd HH:mm:ss"));
+				csv.WriteField(listing.QuotePrice);
+				csv.WriteField(listing.OneHourChange);
+				csv.WriteField(listing.VolumeChange24h);
+				csv.WriteField(listing.MarketCap);
+				csv.WriteField(listing.PlatformName);
+				csv.WriteField(listing.MaximumSupply);
+				csv.WriteField(listing.MarketCapDominance);
+				csv.WriteField(listing.Volume24h);
+				csv.WriteField(listing.DisplayKey);
 
 				csv.NextRecord();
 			}
+		}
+
+		public LatestListing MapToLatestListing(IList<object> row)
+		{
+			if (row == null || row.Count < 16)
+			{
+				return null;
+			}
+
+			LatestListing listing = new LatestListing
+			{
+				ID = row[0]?.ToString(),
+				Name = row[1]?.ToString(),
+				Symbol = row[2]?.ToString(),
+				DateAdded = DateTime.FromOADate((double)row[3]),
+				CirculatingSupply = row[4]?.ToString(),
+				Rank = row[5]?.ToString(),
+				LastUpdated = DateTime.FromOADate((double)row[6]),
+				QuotePrice = row[7]?.ToString(),
+				OneHourChange = row[8]?.ToString(),
+				VolumeChange24h = row[9]?.ToString(),
+				MarketCap = row[10]?.ToString(),
+				PlatformName = row[11]?.ToString(),
+				MaximumSupply = row[12]?.ToString(),
+				MarketCapDominance = row[13]?.ToString(),
+				Volume24h = row[14]?.ToString(),
+				DisplayKey = row[15]?.ToString(),
+			};
+
+			return listing;
 		}
 	}
 }
