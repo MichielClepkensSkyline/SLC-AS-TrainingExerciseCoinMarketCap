@@ -1,21 +1,16 @@
-﻿using Skyline.DataMiner.Automation;
-using Skyline.DataMiner.Utils.SecureCoding.SecureIO;
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CoinMarketCap_1
+﻿namespace CoinMarketCap_1
 {
+	using System;
+	using System.IO;
+	using Skyline.DataMiner.Automation;
+	using Skyline.DataMiner.Utils.SecureCoding.SecureIO;
+
 	public class Path
 	{
 
 		public SecurePath FormPath(IEngine engine, string elementName)
 		{
-			string folderName = engine.GetScriptParam("Folder Name").Value;
+			string folderName = engine.GetScriptParam(2).Value;
 
 			if (String.IsNullOrWhiteSpace(folderName))
 			{
