@@ -1,12 +1,8 @@
 ﻿namespace CoinMarketCap_1
 {
-	using System;
-	using System.Collections.Generic;
-	using System.Linq;
-	using System.Text;
-	using System.Threading.Tasks;
+    using System;
 
-	public class LatestListings
+    public class LatestListings
     {
         public string Id { get; set; }
 

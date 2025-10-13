@@ -13,9 +13,13 @@
 	using Skyline.DataMiner.Core.DataMinerSystem.Common.Selectors;
 	using Skyline.DataMiner.Net.ReportsAndDashboards;
 	using Skyline.DataMiner.Net.SLSearch.Misc;
+    using Skyline.DataMiner.Utils.SecureCoding.SecureIO;
 
-	public class Data
+    public class Data
     {
+        private const string ProtocolName = "Exercise HTTP CoinMarketCap Emir";
+        private const string ProtocolVersion = "Production";
+
         public enum Tables
         {
             LatestListings = 100,
@@ -23,16 +27,13 @@
 
         public void StoreData(IDms dms, IEngine engine)
         {
-            string protocolName = "Exercise HTTP CoinMarketCap Emir";
-            string protocolVersion = "Production";
-
-            if (!dms.ProtocolExists(protocolName, protocolVersion))
+            if (!dms.ProtocolExists(ProtocolName, ProtocolVersion))
             {
                 engine.Log($"[ERROR] No protocol with this name and version was found");
                 return;
             }
 
-            IEnumerable<IDmsElement> elements = dms.GetElements().Where(e => e.Protocol.Name == protocolName && e.Protocol.Version == protocolVersion);
+            IEnumerable<IDmsElement> elements = dms.GetElements().Where(e => e.Protocol.Name == ProtocolName && e.Protocol.Version == ProtocolVersion && e.State == ElementState.Active);
             foreach (IDmsElement element in elements)
             {
                 try
@@ -44,7 +45,7 @@
                     }
                     else
                     {
-                        engine.ExitFail("There was an issue with reading the data from the table");
+                        engine.Log("There was an issue with reading the data from the table");
                     }
                 }
                 catch (Exception ex)
@@ -54,7 +55,7 @@
             }
         }
 
-        public IDictionary<string, object[]> ReadDataFormTable(int tableId, IDmsElement element, IEngine engine)
+        private IDictionary<string, object[]> ReadDataFormTable(int tableId, IDmsElement element, IEngine engine)
         {
             IDmsTable table = element.GetTable(tableId);
             if (table == null)
@@ -73,9 +74,10 @@
             return tableData;
         }
 
-        public void StoreDataInCSV(IDictionary<string, object[]> listingsTableData, IEngine engine, string elementName)
+        private void StoreDataInCSV(IDictionary<string, object[]> listingsTableData, IEngine engine, string elementName)
         {
-            string filePath = CreatePath(engine, elementName);
+            Path path = new Path();
+            SecurePath filePath = path.CreatePath(engine, elementName);
 
             using (var writer = new StreamWriter(filePath))
             using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
@@ -109,29 +111,7 @@
                 }
 
                 csv.WriteRecords(listings);
-                engine.Log($"File saved succesfully at {filePath}");
             }
-        }
-
-        public string CreatePath(IEngine engine, string elementName)
-        {
-            string folderName = engine.GetScriptParam("FolderName").Value;
-
-            if (string.IsNullOrWhiteSpace(folderName))
-            {
-                engine.ExitFail("Folder name was not entered correctly");
-            }
-
-            string directoryPath = $"C:\\Skyline DataMiner\\Documents\\SLC-AS-TrainingExerciseCoinMarketCap\\{folderName}";
-
-            if (!Directory.Exists(directoryPath))
-            {
-                Directory.CreateDirectory(directoryPath);
-            }
-
-            string filePath = $"{directoryPath}\\{elementName}.csv";
-
-            return filePath;
         }
     }
 }
