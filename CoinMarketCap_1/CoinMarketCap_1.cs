@@ -181,20 +181,27 @@ namespace CoinMarketCap_1
 		{
 			// Check folder
 			string folderPath = engine.GetScriptParam(ScriptParamId).Value;
-			SecurePath secureFolderPath = SecurePath.ConstructSecurePath(BasePath, folderPath);
-			if (!Directory.Exists(secureFolderPath))
+			if (String.IsNullOrWhiteSpace(folderPath))
 			{
-				Directory.CreateDirectory(secureFolderPath);
+				throw new ArgumentException("Give a valid value for Folder (not empty or whitespaces)");
 			}
+			else
+			{
+				SecurePath secureFolderPath = SecurePath.ConstructSecurePath(BasePath, folderPath);
+				if (!Directory.Exists(secureFolderPath))
+				{
+					Directory.CreateDirectory(secureFolderPath);
+				}
 
-			// Make secure path
-			string filePath = element.GetName() + FileExtension;
-			SecurePath securePath = SecurePath.ConstructSecurePath(secureFolderPath, filePath);
+				// Make secure path
+				string filePath = element.GetName() + FileExtension;
+				SecurePath securePath = SecurePath.ConstructSecurePath(secureFolderPath, filePath);
 
-			// Make csv writer
-			StreamWriter writer = new StreamWriter(securePath);
-			CsvWriter csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
-			return csvWriter;
+				// Make csv writer
+				StreamWriter writer = new StreamWriter(securePath);
+				CsvWriter csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
+				return csvWriter;
+			}
 		}
 	}
 }
